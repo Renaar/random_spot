@@ -261,8 +261,27 @@ details.panneau .corps{padding:0 14px 14px}
 #btn-tirer{font-size:26px;font-weight:800;letter-spacing:1.5px;padding:14px 42px;border-radius:14px}
 #actions-fin{display:none;gap:10px}
 #actions-fin.visible{display:flex}
-#bandeau-tirage{margin:0 26px 8px;display:none}
-#bandeau-tirage.visible{display:block}
+/* Message discret, en bas à gauche sous la pioche : il ne recouvre jamais le plan
+   et ne décale rien, contrairement à un bandeau dans le flux. */
+#popup-tirage{
+  position:fixed;left:20px;bottom:20px;width:310px;max-width:calc(100vw - 40px);
+  background:var(--surface);border:1px solid var(--bord);border-left:4px solid #d97706;
+  border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.14);
+  padding:11px 12px 12px 13px;font-size:12.5px;line-height:1.42;z-index:60;display:none;
+}
+#popup-tirage.visible{display:block;animation:popup-entree .28s cubic-bezier(.22,.61,.36,1)}
+#popup-tirage.bloquant{border-left-color:var(--alerte)}
+#popup-tirage .titre{font-weight:700;font-size:13px;padding-right:16px}
+#popup-tirage.bloquant .titre{color:var(--alerte)}
+#popup-tirage ul{margin:5px 0 0;padding-left:16px;color:var(--doux)}
+#popup-tirage li{margin:2px 0}
+#popup-tirage .fermer{
+  position:absolute;top:4px;right:5px;border:none;background:none;cursor:pointer;
+  color:var(--doux);font-size:15px;line-height:1;padding:2px 6px;border-radius:6px;
+}
+#popup-tirage .fermer:hover{background:#f1f1f4;color:var(--texte)}
+@keyframes popup-entree{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){#popup-tirage.visible{animation:none}}
 
 /* Accessibilité : pas de vol de cartes si l'utilisateur limite les animations */
 @media (prefers-reduced-motion: reduce){
@@ -488,7 +507,10 @@ details.panneau .corps{padding:0 14px 14px}
     </div>
   </div>
 
-  <div id="bandeau-tirage" class="avert"></div>
+  <div id="popup-tirage">
+    <button class="fermer" title="Fermer">×</button>
+    <div class="contenu"></div>
+  </div>
 
   <div id="scene">
     <div id="pioche-zone">
@@ -1916,8 +1938,8 @@ function preparerTirage() {
   const pbs = problemesZones(cl);
   const presents = elevesPresents(cl).length;
   if (presents > cl.salle.places.length) pbs.unshift(`Il y a ${presents} élèves présents pour seulement ${cl.salle.places.length} places.`);
-  if (pbs.length) afficherBandeau("Tirage impossible pour l'instant :", pbs);
-  else masquerBandeau();
+  if (pbs.length) afficherMessage("Tirage impossible pour l'instant", pbs, true);
+  else masquerMessage();
 }
 
 function majLegendePioche(n) {
@@ -1925,22 +1947,39 @@ function majLegendePioche(n) {
   pioche.classList.toggle("vide", n <= 0);
 }
 
-function afficherBandeau(titre, lignes) {
-  const b = $("#bandeau-tirage");
-  const MAX = 8;                                   // au-delà, le bandeau mangerait l'écran
+let minuteriePopup = null;
+
+/**
+ * Affiche un message discret en bas à gauche de l'écran de tirage.
+ * Un blocage reste affiché jusqu'à fermeture ; un simple avertissement
+ * s'efface tout seul après quelques secondes, pour ne pas rester sur le
+ * plan projeté pendant toute l'heure.
+ */
+function afficherMessage(titre, lignes, bloquant) {
+  const p = $("#popup-tirage");
+  const MAX = 6;                                   // au-delà, la bulle deviendrait un pavé
   const visibles = lignes.slice(0, MAX);
   const reste = lignes.length - visibles.length;
-  b.innerHTML = `<strong>${echapper(titre)}</strong><ul>` +
+  $(".contenu", p).innerHTML =
+    `<div class="titre">${echapper(titre)}</div><ul>` +
     visibles.map(l => `<li>${echapper(l)}</li>`).join("") +
     (reste > 0 ? `<li>… et ${reste} autre${reste > 1 ? "s" : ""}.</li>` : "") +
     `</ul>`;
-  b.classList.add("visible");
+  p.classList.toggle("bloquant", !!bloquant);
+  p.classList.add("visible");
+  clearTimeout(minuteriePopup);
+  if (!bloquant) minuteriePopup = setTimeout(masquerMessage, 15000);
 }
-function masquerBandeau() { $("#bandeau-tirage").classList.remove("visible"); }
+function masquerMessage() {
+  clearTimeout(minuteriePopup);
+  $("#popup-tirage").classList.remove("visible");
+}
+$("#popup-tirage .fermer").addEventListener("click", masquerMessage);
 
 function viderCartes() { if (coucheCartes) coucheCartes.innerHTML = ""; }
 
 function interrompreTirage() {
+  masquerMessage();
   jetonTirage++;
   tirageEnCours = false;
   pioche.classList.remove("melange", "attente");
@@ -2079,10 +2118,10 @@ async function lancerTirage() {
 
   const resultat = calculerTirage(cl, etat.options);
   if (!resultat.ok) {
-    afficherBandeau("Tirage impossible :", resultat.erreurs);
+    afficherMessage("Tirage impossible", resultat.erreurs, true);
     return;
   }
-  masquerBandeau();
+  masquerMessage();
 
   const jeton = ++jetonTirage;
   tirageEnCours = true;
@@ -2129,7 +2168,7 @@ async function lancerTirage() {
   dernierRendu = { classeId: cl.id, attribution: resultat.attribution, noms: cl.historique[0].noms, date: cl.historique[0].date };
   const remarques = resultat.violations.concat(resultat.avertissements || []);
   if (remarques.length) {
-    afficherBandeau("Le plan est fait, mais ces règles n'ont pas pu être respectées :", remarques);
+    afficherMessage("Règles non respectées", remarques, false);
   }
   if (ecranActif === "classes") rendreHistorique();
 }
@@ -2169,7 +2208,7 @@ $("#btn-reutiliser").addEventListener("click", () => {
   const h = cl.historique[0];
   afficherStatique(cl, h.attribution, h.noms, h.date);
   $("#panneau-options").classList.remove("ouvert");
-  masquerBandeau();
+  masquerMessage();
 });
 
 /* ==========================================================================
