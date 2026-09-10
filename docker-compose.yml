@@ -1,0 +1,14 @@
+# Plan de Classe — service statique servi par nginx.
+# Emplacement attendu sur le serveur : /opt/stacks/plan-de-classe/
+services:
+  plan-de-classe:
+    image: nginx:alpine
+    container_name: plan-de-classe
+    restart: unless-stopped
+    ports:
+      - "3003:80"
+    volumes:
+      # Le dossier de l'application est monté en lecture seule : nginx ne peut rien y écrire.
+      - ./:/usr/share/nginx/html:ro
+    environment:
+      TZ: Europe/Zurich
