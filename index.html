@@ -1,0 +1,2320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan de Classe</title>
+<style>
+/* ==========================================================================
+   PLAN DE CLASSE — feuille de style unique
+   Sections : 1) bases  2) coquille  3) écran Classes  4) éditeur de salle
+              5) écran Tirage  6) impression
+   ========================================================================== */
+
+/* ---------- 1. Bases ---------- */
+:root{
+  --fond:#f7f7f4;
+  --surface:#ffffff;
+  --bord:#e3e3e8;
+  --bord-fort:#c9c9d2;
+  --texte:#1b1b1f;
+  --doux:#6b6b76;
+  --accent:#1d4ed8;
+  --accent-sombre:#173da8;
+  --accent-pale:#e9eefc;
+  --alerte:#b42318;
+  --alerte-fond:#fdecea;
+  --ok:#166534;
+  --ok-fond:#eaf6ec;
+  --rayon:10px;
+  --ombre:0 1px 2px rgba(0,0,0,.05), 0 2px 10px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:var(--fond);color:var(--texte);font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0 0 .4em;line-height:1.2}
+h1{font-size:19px;letter-spacing:.2px}
+h2{font-size:17px}
+h3{font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--doux)}
+p{margin:.4em 0}
+button,input,select,textarea{font:inherit;color:inherit}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface);border:1px solid var(--bord-fort);border-radius:8px;
+  padding:7px 12px;cursor:pointer;white-space:nowrap;
+  transition:background .12s ease, border-color .12s ease;
+}
+.btn:hover{background:#f1f1f4}
+.btn:active{background:#e8e8ee}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primaire{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.primaire:hover{background:var(--accent-sombre)}
+.btn.danger{color:var(--alerte);border-color:#e7b9b4}
+.btn.danger:hover{background:var(--alerte-fond)}
+.btn.actif{background:var(--accent-pale);border-color:var(--accent);color:var(--accent-sombre);font-weight:600}
+.btn.mini{padding:3px 8px;font-size:13px;border-radius:6px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+input[type=text],select,textarea{
+  background:var(--surface);border:1px solid var(--bord-fort);border-radius:8px;padding:7px 9px;width:100%;
+}
+input[type=text]:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+label{cursor:pointer}
+.carte-ui{background:var(--surface);border:1px solid var(--bord);border-radius:var(--rayon);box-shadow:var(--ombre);padding:14px}
+.ligne{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.discret{color:var(--doux);font-size:13px}
+.avert{background:var(--alerte-fond);border:1px solid #f0c4bf;color:var(--alerte);border-radius:8px;padding:9px 12px;font-size:14px}
+.avert ul{margin:.3em 0 0;padding-left:20px}
+.info-ok{background:var(--ok-fond);border:1px solid #c5e2cb;color:var(--ok);border-radius:8px;padding:9px 12px;font-size:14px}
+
+/* ---------- 2. Coquille (barre + onglets) ---------- */
+#barre{
+  display:flex;align-items:center;gap:18px;
+  padding:10px 18px;background:var(--surface);border-bottom:1px solid var(--bord);
+  position:sticky;top:0;z-index:30;
+}
+#barre .marque{font-weight:700;font-size:17px;letter-spacing:-.2px}
+#barre .marque span{color:var(--accent)}
+nav.onglets{display:flex;gap:4px}
+nav.onglets button{
+  background:none;border:1px solid transparent;border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:500;
+}
+nav.onglets button:hover{background:#f1f1f4}
+nav.onglets button.actif{background:var(--accent-pale);color:var(--accent-sombre);font-weight:600}
+#barre .droite{margin-left:auto;display:flex;align-items:center;gap:10px}
+#barre select{width:auto;min-width:150px}
+
+main{padding:18px;max-width:1700px;margin:0 auto}
+.ecran{display:none}
+.ecran.visible{display:block}
+
+/* En mode tirage, toute l'interface d'édition disparaît */
+body.mode-tirage #barre{display:none}
+body.mode-tirage main{padding:0;max-width:none}
+
+/* ---------- 3. Écran Classes ---------- */
+#ecran-classes{display:none;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start}
+#ecran-classes.visible{display:grid}
+#liste-classes{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:4px}
+#liste-classes li button{
+  width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:8px;
+  padding:7px 10px;cursor:pointer;font-weight:500;
+}
+#liste-classes li button:hover{background:#f1f1f4}
+#liste-classes li button.actif{background:var(--accent-pale);color:var(--accent-sombre);font-weight:600}
+#zone-noms{min-height:230px;resize:vertical;font-family:inherit;line-height:1.6}
+#pastilles{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pastille{
+  display:inline-flex;align-items:center;gap:6px;background:var(--surface);
+  border:1px solid var(--bord-fort);border-radius:999px;padding:3px 4px 3px 11px;font-size:14px;
+}
+.pastille.absente{opacity:.55;text-decoration:line-through}
+.pastille label{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--doux);text-decoration:none}
+.pastille .sup{
+  border:none;background:none;cursor:pointer;color:var(--doux);font-size:15px;line-height:1;
+  padding:2px 6px;border-radius:999px;
+}
+.pastille .sup:hover{background:var(--alerte-fond);color:var(--alerte)}
+#compteur{font-size:17px;font-weight:600;margin-top:12px}
+#compteur .mal{color:var(--alerte)}
+details.panneau{border:1px solid var(--bord);border-radius:var(--rayon);background:var(--surface);margin-top:14px;box-shadow:var(--ombre)}
+details.panneau>summary{cursor:pointer;padding:11px 14px;font-weight:600;list-style:none;display:flex;align-items:center;gap:8px}
+details.panneau>summary::-webkit-details-marker{display:none}
+details.panneau>summary::before{content:"▸";color:var(--doux);transition:transform .15s ease}
+details.panneau[open]>summary::before{transform:rotate(90deg)}
+details.panneau .corps{padding:0 14px 14px}
+.regle{
+  display:flex;align-items:center;gap:8px;background:#fafafc;border:1px solid var(--bord);
+  border-radius:8px;padding:5px 6px 5px 11px;font-size:14px;
+}
+.regles-liste{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ajout-regle{display:grid;grid-template-columns:1fr auto 1fr auto;gap:8px;align-items:center;margin-top:8px}
+.ajout-regle .fleche{color:var(--doux)}
+.entree-histo{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--bord);
+  border-radius:8px;background:#fafafc;margin-bottom:6px;
+}
+.entree-histo .titre{font-weight:600}
+.entree-histo .droite{margin-left:auto;display:flex;gap:6px}
+
+/* ---------- 4. Éditeur de salle ---------- */
+#ecran-salle{display:none;grid-template-columns:minmax(0,1fr) 290px;gap:16px;align-items:start}
+#ecran-salle.visible{display:grid}
+#outils{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+#outils .sep{width:1px;background:var(--bord-fort);margin:2px 4px}
+/* Le canevas garde le rapport 20/14 et tient dans la hauteur de la fenêtre. */
+#cadre-canevas{width:min(100%, calc((100vh - 270px) * 1.42857));margin:0 auto}
+
+.bandeau-tableau{
+  background:#2b2b31;color:#fff;text-align:center;font-weight:700;letter-spacing:6px;font-size:13px;
+  padding:6px;border-radius:8px 8px 0 0;
+}
+#canevas{
+  position:relative;width:100%;aspect-ratio:20/14;background:var(--surface);
+  border:1px solid var(--bord-fort);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;
+  user-select:none;cursor:crosshair;
+  background-image:
+    repeating-linear-gradient(to right,#ededf2 0 1px,transparent 1px 5%),
+    repeating-linear-gradient(to bottom,#ededf2 0 1px,transparent 1px 7.142857%);
+}
+#canevas.outil-select{cursor:default}
+.place{position:absolute;width:5%;height:7.142857%}
+.place .boite{
+  position:absolute;inset:7%;border:2px solid var(--bord-fort);border-radius:7px;background:#fdfdfe;
+  display:flex;align-items:center;justify-content:center;
+}
+#canevas .place{cursor:grab}
+#canevas .place.selectionnee .boite{border-color:var(--accent);background:var(--accent-pale);box-shadow:0 0 0 2px rgba(29,78,216,.18)}
+.place .num{font-size:11px;color:#a2a2ae;font-variant-numeric:tabular-nums;pointer-events:none}
+.mobilier{
+  position:absolute;background:#e6e6ec;border:1px solid #c2c2cc;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;color:#5a5a66;font-size:12px;
+  text-align:center;overflow:hidden;padding:2px;cursor:move;
+}
+.zone{position:absolute;border:2px dashed;border-radius:8px;pointer-events:none}
+.zone .etiq{
+  position:absolute;top:2px;left:4px;font-size:11px;font-weight:600;padding:1px 6px;border-radius:6px;
+  background:rgba(255,255,255,.88);pointer-events:auto;cursor:move;
+}
+.zone .poignee{
+  position:absolute;right:-6px;bottom:-6px;width:12px;height:12px;border-radius:3px;
+  background:var(--surface);border:2px solid currentColor;pointer-events:auto;cursor:nwse-resize;
+}
+.mobilier .poignee{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;background:#b4b4c0;cursor:nwse-resize;border-radius:3px 0 5px 0}
+#rectangle-sel{position:absolute;border:1.5px solid var(--accent);background:rgba(29,78,216,.09);pointer-events:none;border-radius:3px}
+#aide-editeur{font-size:13px;color:var(--doux);margin-top:10px}
+#aide-editeur kbd{background:#eee;border:1px solid var(--bord-fort);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:12px;font-family:inherit}
+.zone-item{display:flex;align-items:center;gap:6px;padding:5px 6px;border:1px solid var(--bord);border-radius:8px;margin-bottom:5px;font-size:14px}
+.zone-item .pastille-couleur{width:12px;height:12px;border-radius:3px;flex:none}
+.zone-item .nom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- 5. Écran Tirage ---------- */
+#ecran-tirage{display:none;height:100vh;position:relative}
+#ecran-tirage.visible{display:flex;flex-direction:column}
+#tirage-haut{display:flex;align-items:center;gap:10px;padding:10px 16px}
+#tirage-haut .titre-classe{font-weight:700;font-size:18px}
+#tirage-haut .droite{margin-left:auto;display:flex;gap:8px;align-items:center}
+#panneau-options{
+  position:absolute;right:16px;top:52px;z-index:20;width:330px;display:none;
+}
+#panneau-options.ouvert{display:block}
+#panneau-options .opt{display:flex;align-items:center;gap:8px;margin:7px 0}
+#panneau-options .opt input{width:auto}
+#scene{position:relative;flex:1;display:flex;align-items:center;gap:24px;padding:0 26px 6px;min-height:0}
+#pioche-zone{width:210px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+#pioche{position:relative;width:150px;height:104px}
+#pioche .dos-pile{
+  position:absolute;inset:0;border-radius:10px;background:#22307a;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.09) 0 6px,transparent 6px 12px);
+  border:2px solid #18235c;box-shadow:0 3px 10px rgba(0,0,0,.18);
+}
+#pioche .dos-pile:nth-child(1){transform:translate(-6px,-5px) rotate(-4deg)}
+#pioche .dos-pile:nth-child(2){transform:translate(3px,-2px) rotate(3deg)}
+#pioche .dos-pile:nth-child(3){transform:none}
+#pioche.melange .dos-pile{animation:secousse .2s ease-in-out infinite}
+#pioche.melange .dos-pile:nth-child(2){animation-delay:.06s}
+#pioche.melange .dos-pile:nth-child(3){animation-delay:.12s}
+#pioche.attente .dos-pile:nth-child(3){animation:pulsation .5s ease-in-out infinite}
+#pioche.vide{opacity:.18}
+@keyframes secousse{
+  0%{transform:translate(0,0) rotate(-5deg)}
+  50%{transform:translate(7px,-4px) rotate(6deg)}
+  100%{transform:translate(0,0) rotate(-5deg)}
+}
+@keyframes pulsation{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+#pioche-legende{color:var(--doux);font-size:14px;text-align:center}
+
+#plan-zone{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;height:100%}
+#plan-cadre{width:100%;max-width:100%;display:flex;flex-direction:column}
+#plan-cadre .bandeau-tableau{letter-spacing:10px;font-size:15px;padding:8px}
+#plan{
+  position:relative;width:100%;aspect-ratio:20/14;background:var(--surface);
+  border:1px solid var(--bord);border-top:none;border-radius:0 0 10px 10px;
+}
+#plan .place .boite{border:2px solid #d7d7e0;background:#fcfcfd}
+#plan .place .num{font-size:12px;color:#c3c3ce}
+#couche-cartes{position:absolute;inset:0;pointer-events:none;perspective:1000px;z-index:5}
+.vol{position:absolute;left:0;top:0;will-change:transform}
+.arc{position:absolute;inset:0;will-change:transform}
+.carte{position:absolute;inset:6%;transform-style:preserve-3d;will-change:transform}
+.carte .face{
+  position:absolute;inset:0;backface-visibility:hidden;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.16);overflow:hidden;
+}
+.carte .face.avant{font-weight:800;color:#1b1b1f;padding:2px;white-space:nowrap;letter-spacing:-.2px}
+.carte .face.dos{
+  transform:rotateY(180deg);background:#22307a;border:2px solid #18235c;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.09) 0 6px,transparent 6px 12px);
+}
+.place.eclat .boite::after{
+  content:"";position:absolute;inset:-6%;border-radius:10px;background:#fff;
+  animation:flash .42s ease-out forwards;
+}
+@keyframes flash{from{opacity:.85;transform:scale(1.12)}to{opacity:0;transform:scale(1)}}
+#tirage-bas{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 16px 20px}
+#btn-tirer{font-size:26px;font-weight:800;letter-spacing:1.5px;padding:14px 42px;border-radius:14px}
+#actions-fin{display:none;gap:10px}
+#actions-fin.visible{display:flex}
+#bandeau-tirage{margin:0 26px 8px;display:none}
+#bandeau-tirage.visible{display:block}
+
+/* Accessibilité : pas de vol de cartes si l'utilisateur limite les animations */
+@media (prefers-reduced-motion: reduce){
+  #pioche.melange .dos-pile,#pioche.attente .dos-pile{animation:none}
+}
+
+/* ---------- 6. Impression : une page A4 paysage ---------- */
+#feuille-impression{display:none}
+@media print{
+  @page{size:A4 landscape;margin:9mm}
+  body{background:#fff}
+  body>*{display:none !important}
+  #feuille-impression{display:block !important}
+  #feuille-impression .entete{display:flex;align-items:baseline;gap:12px;margin-bottom:5mm}
+  #feuille-impression .entete h2{font-size:16pt;margin:0}
+  #feuille-impression .entete .date{color:#555;font-size:11pt;margin-left:auto}
+  #feuille-impression .bandeau-tableau{background:#2b2b31 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #feuille-impression .plan{
+    position:relative;width:100%;aspect-ratio:20/14;border:1px solid #999;border-top:none;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  #feuille-impression .place{position:absolute;width:5%;height:7.142857%}
+  #feuille-impression .place .boite{
+    position:absolute;inset:6%;border:1px solid #bbb;border-radius:5px;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  #feuille-impression .place .boite.occupee{border:1px solid #666;font-weight:700}
+  #feuille-impression .mobilier{position:absolute;background:#e6e6ec;border:1px solid #b0b0bb;color:#444}
+}
+</style>
+</head>
+<body>
+
+<!-- ====================== BARRE + ONGLETS ====================== -->
+<header id="barre">
+  <div class="marque">Plan de <span>Classe</span></div>
+  <nav class="onglets">
+    <button data-ecran="classes" class="actif">Classes</button>
+    <button data-ecran="salle">Salle</button>
+    <button data-ecran="tirage">Tirage</button>
+  </nav>
+  <div class="droite">
+    <label class="discret" for="choix-classe">Classe&nbsp;:</label>
+    <select id="choix-classe" aria-label="Classe courante"></select>
+  </div>
+</header>
+
+<main>
+
+<!-- ====================== ÉCRAN CLASSES ====================== -->
+<section id="ecran-classes" class="ecran visible">
+
+  <!-- Colonne de gauche : les classes -->
+  <div class="carte-ui">
+    <h3>Mes classes</h3>
+    <ul id="liste-classes"></ul>
+    <div class="ligne">
+      <button class="btn mini primaire" id="btn-nouvelle-classe">+ Nouvelle</button>
+      <button class="btn mini" id="btn-renommer-classe">Renommer</button>
+      <button class="btn mini" id="btn-dupliquer-classe">Dupliquer</button>
+      <button class="btn mini danger" id="btn-supprimer-classe">Supprimer</button>
+    </div>
+
+    <h3 style="margin-top:20px">Données</h3>
+    <div class="ligne">
+      <button class="btn mini" id="btn-export-json">Exporter (JSON)</button>
+      <button class="btn mini" id="btn-import-json">Importer…</button>
+      <input type="file" id="fichier-import" accept="application/json,.json" hidden>
+    </div>
+    <p class="discret" style="margin-top:10px">
+      Les données sont enregistrées dans le navigateur de <strong>cette machine</strong> uniquement.
+      Pensez à exporter le JSON de temps en temps (et avant de vider l'historique du navigateur).
+    </p>
+  </div>
+
+  <!-- Colonne de droite : la classe courante -->
+  <div>
+    <div class="carte-ui">
+      <h2 id="titre-classe">Classe</h2>
+      <label for="zone-noms"><strong>Élèves</strong> — un prénom par ligne (collez votre liste directement)</label>
+      <textarea id="zone-noms" spellcheck="false" placeholder="Alice&#10;Bastien&#10;Chloé&#10;…"></textarea>
+      <div id="pastilles"></div>
+      <div id="compteur"></div>
+      <div id="alerte-zones" class="avert" style="display:none;margin-top:10px"></div>
+    </div>
+
+    <!-- Contraintes de placement -->
+    <details class="panneau" id="panneau-contraintes">
+      <summary>Contraintes de placement</summary>
+      <div class="corps">
+
+        <h3>Places fixes <span class="discret" style="text-transform:none;letter-spacing:0">— l'élève ne participe pas au tirage</span></h3>
+        <div class="ajout-regle">
+          <select id="fixe-eleve"></select>
+          <span class="fleche">→</span>
+          <select id="fixe-place"></select>
+          <button class="btn mini" id="btn-ajout-fixe">Ajouter</button>
+        </div>
+        <div class="regles-liste" id="liste-fixes"></div>
+
+        <h3 style="margin-top:18px">Zones <span class="discret" style="text-transform:none;letter-spacing:0">— tirage restreint aux places de la zone</span></h3>
+        <div class="ajout-regle">
+          <select id="zone-eleve"></select>
+          <span class="fleche">→</span>
+          <select id="zone-nom"></select>
+          <button class="btn mini" id="btn-ajout-zone">Ajouter</button>
+        </div>
+        <div class="regles-liste" id="liste-zones-regles"></div>
+
+        <h3 style="margin-top:18px">Séparations <span class="discret" style="text-transform:none;letter-spacing:0">— à ne pas placer côte à côte</span></h3>
+        <div class="ajout-regle">
+          <select id="sep-a"></select>
+          <span class="fleche">✗</span>
+          <select id="sep-b"></select>
+          <button class="btn mini" id="btn-ajout-sep">Ajouter</button>
+        </div>
+        <div class="regles-liste" id="liste-seps"></div>
+
+      </div>
+    </details>
+
+    <!-- Historique -->
+    <details class="panneau" id="panneau-historique">
+      <summary>Historique des tirages</summary>
+      <div class="corps">
+        <p class="discret">Les 6 derniers plans de cette classe sont conservés. Le plus ancien est écrasé au-delà.</p>
+        <div id="liste-historique"></div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ====================== ÉCRAN SALLE ====================== -->
+<section id="ecran-salle" class="ecran">
+  <div>
+    <div id="outils">
+      <button class="btn" data-outil="select">Sélection</button>
+      <button class="btn" data-outil="place">+ Place</button>
+      <button class="btn" data-outil="double">+ Table double</button>
+      <button class="btn" data-outil="zone">+ Zone</button>
+      <button class="btn" data-outil="mobilier">+ Mobilier</button>
+      <span class="sep"></span>
+      <button class="btn" id="btn-dupliquer-rangee">Dupliquer la rangée</button>
+      <button class="btn danger" id="btn-supprimer-sel">Supprimer</button>
+      <span class="sep"></span>
+      <button class="btn" id="btn-annuler" title="Ctrl+Z">↶ Annuler</button>
+      <button class="btn" id="btn-retablir" title="Ctrl+Y">↷ Rétablir</button>
+    </div>
+
+    <div id="cadre-canevas">
+      <div class="bandeau-tableau">TABLEAU</div>
+      <div id="canevas" class="outil-select"></div>
+    </div>
+
+    <div id="aide-editeur">
+      Glissez une place pour la déplacer · rectangle à la souris pour sélectionner ·
+      <kbd>Suppr</kbd> ou clic droit pour supprimer · <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> pour annuler / rétablir.
+    </div>
+  </div>
+
+  <div>
+    <div class="carte-ui">
+      <h3>Dispositions prêtes</h3>
+      <div class="ligne" style="flex-direction:column;align-items:stretch">
+        <button class="btn" data-preset="rangees">Rangées classiques</button>
+        <button class="btn" data-preset="ilots">Îlots (5 × 4)</button>
+        <button class="btn" data-preset="u">En U</button>
+      </div>
+      <p class="discret" style="margin-top:8px">Remplace le plan actuel (confirmation demandée).</p>
+    </div>
+
+    <div class="carte-ui" style="margin-top:14px">
+      <h3>Zones</h3>
+      <div id="liste-zones"></div>
+      <p class="discret">Outil « + Zone » : tracez un rectangle autour de plusieurs places. Les zones ne sont visibles que dans l'éditeur.</p>
+    </div>
+
+    <div class="carte-ui" style="margin-top:14px">
+      <h3>Mobilier</h3>
+      <div id="liste-mobilier"></div>
+      <p class="discret">Bureau, armoire, porte, évier… : rectangles gris qui ne reçoivent aucun élève.</p>
+    </div>
+
+    <div class="carte-ui" style="margin-top:14px">
+      <h3>Récapitulatif</h3>
+      <div id="recap-salle" class="discret"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== ÉCRAN TIRAGE ====================== -->
+<section id="ecran-tirage" class="ecran">
+  <div id="tirage-haut">
+    <button class="btn mini" id="btn-quitter-tirage">← Retour</button>
+    <div class="titre-classe" id="tirage-titre"></div>
+    <div class="droite">
+      <button class="btn mini" id="btn-plein-ecran">Plein écran</button>
+      <button class="btn mini" id="btn-options-tirage">Options ⚙</button>
+    </div>
+  </div>
+
+  <div id="panneau-options" class="carte-ui">
+    <h3>Options du tirage</h3>
+    <div class="opt">
+      <label for="opt-vitesse">Vitesse</label>
+      <select id="opt-vitesse" style="width:auto;margin-left:auto">
+        <option value="lent">Lent (200 ms)</option>
+        <option value="normal">Normal (120 ms)</option>
+        <option value="rapide">Rapide (60 ms)</option>
+      </select>
+    </div>
+    <div class="opt"><input type="checkbox" id="opt-suspense"><label for="opt-suspense">Suspense final (dernier élève retardé)</label></div>
+    <div class="opt"><input type="checkbox" id="opt-place"><label for="opt-place">Éviter la même place qu'au dernier tirage</label></div>
+    <div class="opt"><input type="checkbox" id="opt-voisins"><label for="opt-voisins">Éviter les mêmes voisins qu'au dernier tirage</label></div>
+    <div class="opt" style="margin-top:12px">
+      <button class="btn mini" id="btn-reutiliser" style="width:100%">Réutiliser le dernier tirage (sans animation)</button>
+    </div>
+  </div>
+
+  <div id="bandeau-tirage" class="avert"></div>
+
+  <div id="scene">
+    <div id="pioche-zone">
+      <div id="pioche">
+        <div class="dos-pile"></div><div class="dos-pile"></div><div class="dos-pile"></div>
+      </div>
+      <div id="pioche-legende"></div>
+    </div>
+    <div id="plan-zone">
+      <div id="plan-cadre">
+        <div class="bandeau-tableau">TABLEAU</div>
+        <div id="plan"><div id="couche-cartes"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tirage-bas">
+    <button class="btn primaire" id="btn-tirer">TIRER AU SORT</button>
+    <div id="actions-fin">
+      <button class="btn" id="btn-relancer">Relancer</button>
+      <button class="btn" id="btn-export-image">Exporter en image</button>
+      <button class="btn" id="btn-imprimer">Imprimer</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- Feuille dédiée à l'impression (masquée à l'écran) -->
+<div id="feuille-impression"></div>
+
+<script>
+"use strict";
+/* ==========================================================================
+   1. UTILITAIRES
+   ========================================================================== */
+
+const $  = (sel, racine = document) => racine.querySelector(sel);
+const $$ = (sel, racine = document) => Array.from(racine.querySelectorAll(sel));
+
+/** Identifiant court et unique. */
+let compteurId = 0;
+function uid(prefixe) {
+  compteurId += 1;
+  return prefixe + "-" + Date.now().toString(36) + "-" + compteurId.toString(36);
+}
+
+/** Source d'aléa : crypto.getRandomValues, sans pondération. */
+const tamponAlea = new Uint32Array(1);
+function aleaBrut() {
+  if (self.crypto && self.crypto.getRandomValues) {
+    self.crypto.getRandomValues(tamponAlea);
+    return tamponAlea[0];
+  }
+  // Repli très improbable (navigateur sans Web Crypto).
+  return Math.floor(Math.random() * 4294967296);
+}
+/** Entier uniforme dans [0, n) — tirage par rejet, donc sans biais modulo. */
+function aleaEntier(n) {
+  if (n <= 1) return 0;
+  const limite = Math.floor(4294967296 / n) * n;
+  let v = aleaBrut();
+  while (v >= limite) v = aleaBrut();
+  return v % n;
+}
+/** Mélange de Fisher-Yates, en place, renvoie le tableau. */
+function melanger(tab) {
+  for (let i = tab.length - 1; i > 0; i--) {
+    const j = aleaEntier(i + 1);
+    const tmp = tab[i]; tab[i] = tab[j]; tab[j] = tmp;
+  }
+  return tab;
+}
+
+/** Hachage stable d'une chaîne (FNV-1a) — sert à la couleur des cartes. */
+function hachage(txt) {
+  let h = 2166136261;
+  for (let i = 0; i < txt.length; i++) {
+    h ^= txt.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** Palette de 8 teintes vives, toutes lisibles avec un texte foncé. */
+const PALETTE = ["#FFD166", "#F4978E", "#B5E48C", "#8ECAE6", "#CDB4F6", "#7DD8C7", "#F9C0E0", "#FFA45B"];
+function couleurEleve(nom) { return PALETTE[hachage(nom.toLowerCase()) % PALETTE.length]; }
+
+function echapper(txt) {
+  return String(txt).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+const MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function dateLisible(iso) {
+  const d = new Date(iso);
+  return d.getDate() + " " + MOIS[d.getMonth()] + " " + d.getFullYear();
+}
+function jourIso(d) {
+  const p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+function pause(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/** L'utilisateur demande-t-il moins d'animations ? */
+function animationsReduites() {
+  return self.matchMedia && self.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/* Géométrie de la grille */
+const COLS = 20, LIGNES = 14;
+/** Deux places sont « côte à côte » si leurs centres sont à moins de 1,5 case. */
+function cotesACote(a, b) {
+  const dx = a.c - b.c, dy = a.r - b.r;
+  return Math.sqrt(dx * dx + dy * dy) < 1.5;
+}
+
+/* ==========================================================================
+   2. ÉTAT & PERSISTANCE
+   ========================================================================== */
+
+const CLE_STOCKAGE = "plan-de-classe/v1";
+const MAX_HISTORIQUE = 6;
+
+/** Plan de salle vide. */
+function salleVide() { return { places: [], mobilier: [], zones: [] }; }
+
+/** Nouvelle classe (avec la disposition « rangées » par défaut). */
+function nouvelleClasse(nom) {
+  return {
+    id: uid("cl"),
+    nom: nom,
+    eleves: [],                                  // { id, nom, absent }
+    salle: presetSalle("rangees"),               // { places, mobilier, zones }
+    regles: { fixes: {}, zones: {}, separations: [] },
+    historique: []                               // { id, date, attribution:{eleveId:placeId}, noms:{eleveId:nom} }
+  };
+}
+
+function etatParDefaut() {
+  const c = nouvelleClasse("9H-A");
+  return {
+    version: 1,
+    classes: [c],
+    classeCouranteId: c.id,
+    options: { vitesse: "normal", suspense: false, eviterMemePlace: true, eviterMemesVoisins: true }
+  };
+}
+
+let etat = null;
+
+function charger() {
+  try {
+    const brut = localStorage.getItem(CLE_STOCKAGE);
+    if (!brut) return etatParDefaut();
+    const donnees = JSON.parse(brut);
+    return normaliser(donnees);
+  } catch (e) {
+    console.warn("Lecture du stockage impossible :", e);
+    return etatParDefaut();
+  }
+}
+
+/** Complète les champs manquants : tolère un JSON importé légèrement différent. */
+function normaliser(d) {
+  if (!d || !Array.isArray(d.classes)) return etatParDefaut();
+  d.version = 1;
+  d.options = Object.assign({ vitesse: "normal", suspense: false, eviterMemePlace: true, eviterMemesVoisins: true }, d.options || {});
+  d.classes.forEach(c => {
+    c.id = c.id || uid("cl");
+    c.nom = c.nom || "Classe";
+    c.eleves = (c.eleves || []).map(e => ({ id: e.id || uid("el"), nom: e.nom || "?", absent: !!e.absent }));
+    c.salle = Object.assign(salleVide(), c.salle || {});
+    c.salle.places = c.salle.places || [];
+    c.salle.mobilier = c.salle.mobilier || [];
+    c.salle.zones = c.salle.zones || [];
+    c.regles = Object.assign({ fixes: {}, zones: {}, separations: [] }, c.regles || {});
+    c.historique = (c.historique || []).slice(0, MAX_HISTORIQUE);
+  });
+  if (!d.classes.some(c => c.id === d.classeCouranteId)) {
+    d.classeCouranteId = d.classes.length ? d.classes[0].id : null;
+  }
+  return d;
+}
+
+let minuterieSauvegarde = null;
+/** Sauvegarde automatique (regroupée pour ne pas écrire à chaque frappe). */
+function sauver() {
+  clearTimeout(minuterieSauvegarde);
+  minuterieSauvegarde = setTimeout(() => {
+    try {
+      localStorage.setItem(CLE_STOCKAGE, JSON.stringify(etat));
+    } catch (e) {
+      alert("Impossible d'enregistrer les données dans ce navigateur (stockage plein ou désactivé).\nExportez votre JSON pour ne rien perdre.");
+    }
+  }, 120);
+}
+
+function classeCourante() {
+  return etat.classes.find(c => c.id === etat.classeCouranteId) || null;
+}
+
+/* Helpers sur une classe ------------------------------------------------- */
+
+function elevesPresents(cl) { return cl.eleves.filter(e => !e.absent); }
+
+/** Places triées haut→bas puis gauche→droite, avec leur numéro d'affichage. */
+function placesNumerotees(salle) {
+  const tri = salle.places.slice().sort((a, b) => (a.r - b.r) || (a.c - b.c));
+  const num = new Map();
+  tri.forEach((p, i) => num.set(p.id, i + 1));
+  return { tri, num };
+}
+
+/** Places dont le centre tombe dans le rectangle d'une zone. */
+function placesDeZone(salle, zone) {
+  return salle.places.filter(p => {
+    const cx = p.c + 0.5, cy = p.r + 0.5;
+    return cx >= zone.c && cx <= zone.c + zone.w && cy >= zone.r && cy <= zone.r + zone.h;
+  });
+}
+
+/**
+ * Rectangle utile de la salle (places + mobilier), avec une marge d'une case.
+ * Sert aux rendus projetés et imprimés : on ne gaspille pas la place à l'écran
+ * quand la salle n'occupe qu'une partie de la grille. L'éditeur, lui, garde
+ * toujours la grille complète 20 × 14.
+ */
+function vueSalle(salle, marge) {
+  marge = (marge === undefined) ? 1 : marge;
+  const blocs = salle.places.map(p => ({ c: p.c, r: p.r, w: 1, h: 1 }))
+    .concat(salle.mobilier.map(m => ({ c: m.c, r: m.r, w: m.w, h: m.h })));
+  if (!blocs.length) return { c: 0, r: 0, w: COLS, h: LIGNES };
+  let c0 = Infinity, r0 = Infinity, c1 = -Infinity, r1 = -Infinity;
+  blocs.forEach(b => {
+    c0 = Math.min(c0, b.c); r0 = Math.min(r0, b.r);
+    c1 = Math.max(c1, b.c + b.w); r1 = Math.max(r1, b.r + b.h);
+  });
+  return {
+    c: Math.max(0, c0 - marge), r: Math.max(0, r0 - marge),
+    w: Math.min(COLS, c1 + marge) - Math.max(0, c0 - marge),
+    h: Math.min(LIGNES, r1 + marge) - Math.max(0, r0 - marge)
+  };
+}
+
+/** Supprime les règles qui pointent vers un élève, une place ou une zone disparus. */
+function nettoyerRegles(cl) {
+  const idsEleves = new Set(cl.eleves.map(e => e.id));
+  const idsPlaces = new Set(cl.salle.places.map(p => p.id));
+  const idsZones = new Set(cl.salle.zones.map(z => z.id));
+  Object.keys(cl.regles.fixes).forEach(k => {
+    if (!idsEleves.has(k) || !idsPlaces.has(cl.regles.fixes[k])) delete cl.regles.fixes[k];
+  });
+  Object.keys(cl.regles.zones).forEach(k => {
+    if (!idsEleves.has(k) || !idsZones.has(cl.regles.zones[k])) delete cl.regles.zones[k];
+  });
+  cl.regles.separations = cl.regles.separations.filter(p => idsEleves.has(p[0]) && idsEleves.has(p[1]));
+}
+
+/* ==========================================================================
+   3. NAVIGATION ENTRE LES ÉCRANS
+   ========================================================================== */
+
+let ecranActif = "classes";
+
+function allerEcran(nom) {
+  if (nom === "tirage" && !classeCourante()) return;
+  if (ecranActif === "tirage" && nom !== "tirage") interrompreTirage();
+  ecranActif = nom;
+  $$(".ecran").forEach(s => s.classList.toggle("visible", s.id === "ecran-" + nom));
+  $$("nav.onglets button").forEach(b => b.classList.toggle("actif", b.dataset.ecran === nom));
+  document.body.classList.toggle("mode-tirage", nom === "tirage");
+  if (nom === "classes") rendreClasses();
+  if (nom === "salle") rendreEditeur();
+  if (nom === "tirage") preparerTirage();
+}
+
+$$("nav.onglets button").forEach(b => b.addEventListener("click", () => allerEcran(b.dataset.ecran)));
+
+/* ==========================================================================
+   4. ÉCRAN CLASSES
+   ========================================================================== */
+
+/** Redessine tout l'écran Classes. */
+function rendreClasses() {
+  const cl = classeCourante();
+  rendreListeClasses();
+  rendreSelecteurClasse();
+  if (!cl) return;
+  $("#titre-classe").textContent = cl.nom;
+  const zone = $("#zone-noms");
+  if (document.activeElement !== zone) zone.value = cl.eleves.map(e => e.nom).join("\n");
+  rendrePastilles();
+  rendreCompteur();
+  rendreContraintes();
+  rendreHistorique();
+}
+
+function rendreListeClasses() {
+  const ul = $("#liste-classes");
+  ul.innerHTML = "";
+  etat.classes.forEach(c => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.textContent = c.nom;
+    b.className = c.id === etat.classeCouranteId ? "actif" : "";
+    b.addEventListener("click", () => { etat.classeCouranteId = c.id; sauver(); rendreClasses(); });
+    li.appendChild(b);
+    ul.appendChild(li);
+  });
+}
+
+function rendreSelecteurClasse() {
+  const sel = $("#choix-classe");
+  sel.innerHTML = etat.classes.map(c => `<option value="${c.id}">${echapper(c.nom)}</option>`).join("");
+  sel.value = etat.classeCouranteId || "";
+}
+$("#choix-classe").addEventListener("change", e => {
+  etat.classeCouranteId = e.target.value;
+  sauver();
+  if (ecranActif === "classes") rendreClasses();
+  if (ecranActif === "salle") rendreEditeur();
+  if (ecranActif === "tirage") preparerTirage();
+});
+
+/* --- Saisie des élèves : une grande zone de texte, un prénom par ligne --- */
+let minuterieNoms = null;
+$("#zone-noms").addEventListener("input", () => {
+  clearTimeout(minuterieNoms);
+  minuterieNoms = setTimeout(appliquerNoms, 350);
+});
+$("#zone-noms").addEventListener("blur", appliquerNoms);
+
+function appliquerNoms() {
+  const cl = classeCourante();
+  if (!cl) return;
+  const noms = $("#zone-noms").value
+    .split("\n")
+    .map(l => l.trim().replace(/\s+/g, " "))
+    .filter(l => l.length > 0);
+
+  // On réutilise les élèves existants par nom : absences et contraintes survivent aux retouches.
+  const restants = new Map();
+  cl.eleves.forEach(e => {
+    const cle = e.nom.toLowerCase();
+    if (!restants.has(cle)) restants.set(cle, []);
+    restants.get(cle).push(e);
+  });
+  cl.eleves = noms.map(nom => {
+    const cle = nom.toLowerCase();
+    const pile = restants.get(cle);
+    if (pile && pile.length) { const e = pile.shift(); e.nom = nom; return e; }
+    return { id: uid("el"), nom: nom, absent: false };
+  });
+  nettoyerRegles(cl);
+  sauver();
+  rendrePastilles();
+  rendreCompteur();
+  rendreContraintes();
+}
+
+function rendrePastilles() {
+  const cl = classeCourante();
+  const hote = $("#pastilles");
+  hote.innerHTML = "";
+  cl.eleves.forEach(e => {
+    const d = document.createElement("span");
+    d.className = "pastille" + (e.absent ? " absente" : "");
+    d.style.borderLeft = "6px solid " + couleurEleve(e.nom);
+    d.innerHTML =
+      `<span>${echapper(e.nom)}</span>` +
+      `<label><input type="checkbox" ${e.absent ? "checked" : ""}> absent</label>` +
+      `<button class="sup" title="Retirer de la classe">×</button>`;
+    d.querySelector("input").addEventListener("change", ev => {
+      e.absent = ev.target.checked;
+      sauver(); rendrePastilles(); rendreCompteur(); rendreContraintes();
+    });
+    d.querySelector(".sup").addEventListener("click", () => {
+      cl.eleves = cl.eleves.filter(x => x.id !== e.id);
+      nettoyerRegles(cl);
+      sauver();
+      $("#zone-noms").value = cl.eleves.map(x => x.nom).join("\n");
+      rendrePastilles(); rendreCompteur(); rendreContraintes();
+    });
+    hote.appendChild(d);
+  });
+}
+
+function rendreCompteur() {
+  const cl = classeCourante();
+  const presents = elevesPresents(cl).length;
+  const places = cl.salle.places.length;
+  const absents = cl.eleves.length - presents;
+  const trop = presents > places;
+  $("#compteur").innerHTML =
+    `<span class="${trop ? "mal" : ""}">${presents} élève${presents > 1 ? "s" : ""} présent${presents > 1 ? "s" : ""} · ${places} place${places > 1 ? "s" : ""}</span>` +
+    (absents ? ` <span class="discret">(${absents} absent${absents > 1 ? "s" : ""})</span>` : "") +
+    (trop ? ` <span class="mal">— il manque ${presents - places} place${presents - places > 1 ? "s" : ""} !</span>` : "");
+  rendreAlerteZones();
+}
+
+/** Contrôle permanent de la faisabilité des zones (visible à la préparation). */
+function rendreAlerteZones() {
+  const cl = classeCourante();
+  const boite = $("#alerte-zones");
+  const pbs = problemesZones(cl);
+  if (!pbs.length) { boite.style.display = "none"; return; }
+  boite.style.display = "block";
+  boite.innerHTML = "<strong>Le tirage sera bloqué :</strong><ul>" +
+    pbs.map(m => `<li>${echapper(m)}</li>`).join("") + "</ul>";
+}
+
+/** Renvoie la liste des zones qui n'offrent pas assez de places libres. */
+function problemesZones(cl) {
+  const messages = [];
+  const presents = elevesPresents(cl);
+  const fixes = cl.regles.fixes;
+  const placesPrises = new Set(presents.filter(e => fixes[e.id]).map(e => fixes[e.id]));
+  cl.salle.zones.forEach(z => {
+    const eleves = presents.filter(e => cl.regles.zones[e.id] === z.id && !fixes[e.id]);
+    if (!eleves.length) return;
+    const libres = placesDeZone(cl.salle, z).filter(p => !placesPrises.has(p.id));
+    if (eleves.length > libres.length) {
+      messages.push(`Zone « ${z.nom} » : ${eleves.length} élève${eleves.length > 1 ? "s" : ""} pour ${libres.length} place${libres.length > 1 ? "s" : ""} libre${libres.length > 1 ? "s" : ""}.`);
+    }
+  });
+  return messages;
+}
+
+/* --- Gestion des classes --- */
+$("#btn-nouvelle-classe").addEventListener("click", () => {
+  const nom = prompt("Nom de la nouvelle classe :", "10H-B");
+  if (!nom || !nom.trim()) return;
+  const c = nouvelleClasse(nom.trim());
+  etat.classes.push(c);
+  etat.classeCouranteId = c.id;
+  sauver(); rendreClasses();
+});
+$("#btn-renommer-classe").addEventListener("click", () => {
+  const cl = classeCourante(); if (!cl) return;
+  const nom = prompt("Nouveau nom :", cl.nom);
+  if (!nom || !nom.trim()) return;
+  cl.nom = nom.trim(); sauver(); rendreClasses();
+});
+$("#btn-dupliquer-classe").addEventListener("click", () => {
+  const cl = classeCourante(); if (!cl) return;
+  const copie = JSON.parse(JSON.stringify(cl));
+  copie.id = uid("cl");
+  copie.nom = cl.nom + " (copie)";
+  copie.historique = [];
+  // Les identifiants internes sont réattribués pour rester indépendants de l'original.
+  const mapEleves = {}, mapPlaces = {}, mapZones = {};
+  copie.eleves.forEach(e => { const n = uid("el"); mapEleves[e.id] = n; e.id = n; });
+  copie.salle.places.forEach(p => { const n = uid("pl"); mapPlaces[p.id] = n; p.id = n; });
+  copie.salle.zones.forEach(z => { const n = uid("zo"); mapZones[z.id] = n; z.id = n; });
+  copie.salle.mobilier.forEach(m => { m.id = uid("mo"); });
+  const fixes = {}, zones = {};
+  Object.keys(cl.regles.fixes).forEach(k => { fixes[mapEleves[k]] = mapPlaces[cl.regles.fixes[k]]; });
+  Object.keys(cl.regles.zones).forEach(k => { zones[mapEleves[k]] = mapZones[cl.regles.zones[k]]; });
+  copie.regles.fixes = fixes;
+  copie.regles.zones = zones;
+  copie.regles.separations = cl.regles.separations.map(p => [mapEleves[p[0]], mapEleves[p[1]]]);
+  nettoyerRegles(copie);
+  etat.classes.push(copie);
+  etat.classeCouranteId = copie.id;
+  sauver(); rendreClasses();
+});
+$("#btn-supprimer-classe").addEventListener("click", () => {
+  const cl = classeCourante(); if (!cl) return;
+  if (!confirm(`Supprimer définitivement la classe « ${cl.nom} » (élèves, plan et historique) ?`)) return;
+  etat.classes = etat.classes.filter(c => c.id !== cl.id);
+  etat.classeCouranteId = etat.classes.length ? etat.classes[0].id : null;
+  if (!etat.classes.length) {
+    const c = nouvelleClasse("Nouvelle classe");
+    etat.classes.push(c);
+    etat.classeCouranteId = c.id;
+  }
+  sauver(); rendreClasses();
+});
+
+/* --- Contraintes de placement --- */
+function rendreContraintes() {
+  const cl = classeCourante();
+  const { tri, num } = placesNumerotees(cl.salle);
+  const nomEleve = id => { const e = cl.eleves.find(x => x.id === id); return e ? e.nom : "?"; };
+
+  const optionsEleves = cl.eleves.map(e => `<option value="${e.id}">${echapper(e.nom)}</option>`).join("");
+  const optionsPlaces = tri.map(p => `<option value="${p.id}">Place ${num.get(p.id)}</option>`).join("");
+  const optionsZones = cl.salle.zones.map(z => `<option value="${z.id}">${echapper(z.nom)}</option>`).join("");
+
+  $("#fixe-eleve").innerHTML = optionsEleves;
+  $("#fixe-place").innerHTML = optionsPlaces || `<option value="">— aucune place —</option>`;
+  $("#zone-eleve").innerHTML = optionsEleves;
+  $("#zone-nom").innerHTML = optionsZones || `<option value="">— aucune zone définie —</option>`;
+  $("#sep-a").innerHTML = optionsEleves;
+  $("#sep-b").innerHTML = optionsEleves;
+
+  // Places fixes
+  $("#liste-fixes").innerHTML = Object.keys(cl.regles.fixes).map(eid =>
+    `<span class="regle">${echapper(nomEleve(eid))} → place ${num.get(cl.regles.fixes[eid]) || "?"}` +
+    `<button class="sup btn mini danger" data-type="fixe" data-id="${eid}">×</button></span>`).join("") ||
+    `<span class="discret">Aucune place fixe.</span>`;
+
+  // Zones
+  $("#liste-zones-regles").innerHTML = Object.keys(cl.regles.zones).map(eid => {
+    const z = cl.salle.zones.find(z => z.id === cl.regles.zones[eid]);
+    return `<span class="regle">${echapper(nomEleve(eid))} → ${echapper(z ? z.nom : "?")}` +
+      `<button class="sup btn mini danger" data-type="zone" data-id="${eid}">×</button></span>`;
+  }).join("") || `<span class="discret">Aucune contrainte de zone.</span>`;
+
+  // Séparations
+  $("#liste-seps").innerHTML = cl.regles.separations.map((p, i) =>
+    `<span class="regle">${echapper(nomEleve(p[0]))} ✗ ${echapper(nomEleve(p[1]))}` +
+    `<button class="sup btn mini danger" data-type="sep" data-id="${i}">×</button></span>`).join("") ||
+    `<span class="discret">Aucune séparation.</span>`;
+
+  $$("#panneau-contraintes .sup").forEach(b => b.addEventListener("click", () => {
+    const t = b.dataset.type;
+    if (t === "fixe") delete cl.regles.fixes[b.dataset.id];
+    if (t === "zone") delete cl.regles.zones[b.dataset.id];
+    if (t === "sep") cl.regles.separations.splice(Number(b.dataset.id), 1);
+    sauver(); rendreContraintes(); rendreCompteur();
+  }));
+}
+
+$("#btn-ajout-fixe").addEventListener("click", () => {
+  const cl = classeCourante();
+  const eid = $("#fixe-eleve").value, pid = $("#fixe-place").value;
+  if (!eid || !pid) return;
+  const occupant = Object.keys(cl.regles.fixes).find(k => cl.regles.fixes[k] === pid && k !== eid);
+  if (occupant) {
+    const e = cl.eleves.find(x => x.id === occupant);
+    alert(`Cette place est déjà attribuée à ${e ? e.nom : "un autre élève"}.`);
+    return;
+  }
+  delete cl.regles.zones[eid];               // Une place fixe rend la zone inutile.
+  cl.regles.fixes[eid] = pid;
+  sauver(); rendreContraintes(); rendreCompteur();
+});
+$("#btn-ajout-zone").addEventListener("click", () => {
+  const cl = classeCourante();
+  const eid = $("#zone-eleve").value, zid = $("#zone-nom").value;
+  if (!eid || !zid) return;
+  if (cl.regles.fixes[eid]) {
+    alert("Cet élève a déjà une place fixe : retirez-la d'abord.");
+    return;
+  }
+  cl.regles.zones[eid] = zid;                // Un seul zone par élève : on écrase.
+  sauver(); rendreContraintes(); rendreCompteur();
+});
+$("#btn-ajout-sep").addEventListener("click", () => {
+  const cl = classeCourante();
+  const a = $("#sep-a").value, b = $("#sep-b").value;
+  if (!a || !b) return;
+  if (a === b) { alert("Choisissez deux élèves différents."); return; }
+  const existe = cl.regles.separations.some(p => (p[0] === a && p[1] === b) || (p[0] === b && p[1] === a));
+  if (existe) return;
+  cl.regles.separations.push([a, b]);
+  sauver(); rendreContraintes();
+});
+
+/* ==========================================================================
+   5. ÉDITEUR DE SALLE
+   ========================================================================== */
+
+const canevas = $("#canevas");
+let outil = "select";
+let selection = new Set();        // identifiants de places sélectionnées
+let pileAnnuler = [], pileRetablir = [];
+
+const COULEURS_ZONES = ["#1d4ed8", "#b45309", "#7c3aed", "#0f766e", "#be123c", "#4d7c0f"];
+
+/* --- Dispositions prêtes à charger --- */
+function presetSalle(nom) {
+  const s = salleVide();
+  const place = (c, r) => s.places.push({ id: uid("pl"), c: c, r: r });
+
+  if (nom === "rangees") {
+    // 5 tables doubles de front × 4 rangées (deux places par table).
+    for (let j = 0; j < 4; j++) {
+      for (let i = 0; i < 5; i++) {
+        const c = 3 + i * 3, r = 2 + j * 2;
+        place(c, r); place(c + 1, r);
+      }
+    }
+    s.mobilier.push({ id: uid("mo"), c: 16, r: 0, w: 4, h: 1, nom: "Bureau du prof" });
+    s.mobilier.push({ id: uid("mo"), c: 0, r: 13, w: 1, h: 1, nom: "Porte" });
+  } else if (nom === "ilots") {
+    // 5 îlots de 4 places (carrés de 2 × 2).
+    [[2, 2], [8, 2], [14, 2], [5, 7], [11, 7]].forEach(([c, r]) => {
+      place(c, r); place(c + 1, r); place(c, r + 1); place(c + 1, r + 1);
+    });
+    s.mobilier.push({ id: uid("mo"), c: 16, r: 0, w: 4, h: 1, nom: "Bureau du prof" });
+    s.mobilier.push({ id: uid("mo"), c: 0, r: 13, w: 1, h: 1, nom: "Porte" });
+  } else {
+    // En U, ouvert vers le tableau.
+    for (let c = 5; c <= 14; c++) place(c, 1);
+    for (let r = 2; r <= 8; r++) { place(5, r); place(14, r); }
+    s.mobilier.push({ id: uid("mo"), c: 16, r: 0, w: 4, h: 1, nom: "Bureau du prof" });
+    s.mobilier.push({ id: uid("mo"), c: 0, r: 13, w: 1, h: 1, nom: "Porte" });
+  }
+  return s;
+}
+
+/* --- Annuler / rétablir (50 niveaux) --- */
+function instantane() {
+  const cl = classeCourante(); if (!cl) return;
+  pileAnnuler.push(JSON.stringify(cl.salle));
+  if (pileAnnuler.length > 50) pileAnnuler.shift();
+  pileRetablir.length = 0;
+}
+function annuler() {
+  const cl = classeCourante();
+  if (!cl || !pileAnnuler.length) return;
+  pileRetablir.push(JSON.stringify(cl.salle));
+  cl.salle = JSON.parse(pileAnnuler.pop());
+  apresModifSalle();
+}
+function retablir() {
+  const cl = classeCourante();
+  if (!cl || !pileRetablir.length) return;
+  pileAnnuler.push(JSON.stringify(cl.salle));
+  cl.salle = JSON.parse(pileRetablir.pop());
+  apresModifSalle();
+}
+function apresModifSalle() {
+  const cl = classeCourante();
+  selection = new Set(Array.from(selection).filter(id => cl.salle.places.some(p => p.id === id)));
+  nettoyerRegles(cl);
+  sauver();
+  rendreEditeur();
+}
+
+$("#btn-annuler").addEventListener("click", annuler);
+$("#btn-retablir").addEventListener("click", retablir);
+
+/* --- Choix de l'outil --- */
+$$("#outils [data-outil]").forEach(b => b.addEventListener("click", () => {
+  outil = b.dataset.outil;
+  $$("#outils [data-outil]").forEach(x => x.classList.toggle("actif", x.dataset.outil === outil));
+  canevas.classList.toggle("outil-select", outil === "select");
+}));
+
+/* --- Rendu de l'éditeur --- */
+function rendreEditeur() {
+  const cl = classeCourante(); if (!cl) return;
+  $$("#outils [data-outil]").forEach(x => x.classList.toggle("actif", x.dataset.outil === outil));
+  canevas.innerHTML = "";
+  const { num } = placesNumerotees(cl.salle);
+
+  // Mobilier (sous les places)
+  cl.salle.mobilier.forEach(m => {
+    const d = document.createElement("div");
+    d.className = "mobilier";
+    d.dataset.id = m.id;
+    d.style.left = (m.c / COLS * 100) + "%";
+    d.style.top = (m.r / LIGNES * 100) + "%";
+    d.style.width = (m.w / COLS * 100) + "%";
+    d.style.height = (m.h / LIGNES * 100) + "%";
+    d.innerHTML = `<span>${echapper(m.nom)}</span><span class="poignee"></span>`;
+    d.title = "Double-clic pour renommer · clic droit pour supprimer";
+    canevas.appendChild(d);
+  });
+
+  // Places
+  cl.salle.places.forEach(p => canevas.appendChild(elementPlace(p, num.get(p.id), selection.has(p.id))));
+
+  // Zones (au-dessus, mais transparentes aux clics)
+  cl.salle.zones.forEach((z, i) => {
+    const couleur = z.couleur || COULEURS_ZONES[i % COULEURS_ZONES.length];
+    const d = document.createElement("div");
+    d.className = "zone";
+    d.dataset.id = z.id;
+    d.style.left = (z.c / COLS * 100) + "%";
+    d.style.top = (z.r / LIGNES * 100) + "%";
+    d.style.width = (z.w / COLS * 100) + "%";
+    d.style.height = (z.h / LIGNES * 100) + "%";
+    d.style.borderColor = couleur;
+    d.style.color = couleur;
+    d.innerHTML = `<span class="etiq" style="color:${couleur}">${echapper(z.nom)}</span><span class="poignee"></span>`;
+    canevas.appendChild(d);
+  });
+
+  rendreListeZones();
+  rendreListeMobilier();
+  rendreRecap();
+  $("#btn-annuler").disabled = !pileAnnuler.length;
+  $("#btn-retablir").disabled = !pileRetablir.length;
+  $("#btn-supprimer-sel").disabled = selection.size === 0;
+  $("#btn-dupliquer-rangee").disabled = selection.size === 0;
+}
+
+function elementPlace(p, numero, selectionnee, vue) {
+  vue = vue || { c: 0, r: 0, w: COLS, h: LIGNES };
+  const d = document.createElement("div");
+  d.className = "place" + (selectionnee ? " selectionnee" : "");
+  d.dataset.id = p.id;
+  d.style.left = ((p.c - vue.c) / vue.w * 100) + "%";
+  d.style.top = ((p.r - vue.r) / vue.h * 100) + "%";
+  d.style.width = (100 / vue.w) + "%";
+  d.style.height = (100 / vue.h) + "%";
+  d.innerHTML = `<div class="boite"><span class="num">${numero}</span></div>`;
+  return d;
+}
+
+function rendreListeZones() {
+  const cl = classeCourante();
+  const hote = $("#liste-zones");
+  if (!cl.salle.zones.length) { hote.innerHTML = `<p class="discret">Aucune zone.</p>`; return; }
+  hote.innerHTML = "";
+  cl.salle.zones.forEach((z, i) => {
+    const couleur = z.couleur || COULEURS_ZONES[i % COULEURS_ZONES.length];
+    const n = placesDeZone(cl.salle, z).length;
+    const d = document.createElement("div");
+    d.className = "zone-item";
+    d.innerHTML =
+      `<span class="pastille-couleur" style="background:${couleur}"></span>` +
+      `<span class="nom">${echapper(z.nom)}</span>` +
+      `<span class="discret">${n} pl.</span>` +
+      `<button class="btn mini" data-act="ren">Renommer</button>` +
+      `<button class="btn mini danger" data-act="sup">×</button>`;
+    d.querySelector('[data-act="ren"]').addEventListener("click", () => {
+      const nom = prompt("Nom de la zone :", z.nom);
+      if (!nom || !nom.trim()) return;
+      instantane(); z.nom = nom.trim(); sauver(); rendreEditeur();
+    });
+    d.querySelector('[data-act="sup"]').addEventListener("click", () => {
+      instantane();
+      cl.salle.zones = cl.salle.zones.filter(x => x.id !== z.id);
+      apresModifSalle();
+    });
+    hote.appendChild(d);
+  });
+}
+
+function rendreListeMobilier() {
+  const cl = classeCourante();
+  const hote = $("#liste-mobilier");
+  if (!cl.salle.mobilier.length) { hote.innerHTML = `<p class="discret">Aucun mobilier.</p>`; return; }
+  hote.innerHTML = "";
+  cl.salle.mobilier.forEach(m => {
+    const d = document.createElement("div");
+    d.className = "zone-item";
+    d.innerHTML = `<span class="nom">${echapper(m.nom)}</span>` +
+      `<button class="btn mini" data-act="ren">Renommer</button>` +
+      `<button class="btn mini danger" data-act="sup">×</button>`;
+    d.querySelector('[data-act="ren"]').addEventListener("click", () => {
+      const nom = prompt("Étiquette :", m.nom);
+      if (!nom || !nom.trim()) return;
+      instantane(); m.nom = nom.trim(); sauver(); rendreEditeur();
+    });
+    d.querySelector('[data-act="sup"]').addEventListener("click", () => {
+      instantane();
+      cl.salle.mobilier = cl.salle.mobilier.filter(x => x.id !== m.id);
+      apresModifSalle();
+    });
+    hote.appendChild(d);
+  });
+}
+
+function rendreRecap() {
+  const cl = classeCourante();
+  const presents = elevesPresents(cl).length;
+  $("#recap-salle").innerHTML =
+    `${cl.salle.places.length} place(s) · ${cl.salle.zones.length} zone(s) · ${cl.salle.mobilier.length} mobilier(s)<br>` +
+    `${presents} élève(s) présent(s) dans « ${echapper(cl.nom)} ».`;
+}
+
+/* --- Géométrie souris --- */
+function coordCanevas(e) {
+  const r = canevas.getBoundingClientRect();
+  return {
+    x: Math.max(0, Math.min(COLS, (e.clientX - r.left) / r.width * COLS)),
+    y: Math.max(0, Math.min(LIGNES, (e.clientY - r.top) / r.height * LIGNES))
+  };
+}
+function caseSous(e) {
+  const p = coordCanevas(e);
+  return { c: Math.min(COLS - 1, Math.floor(p.x)), r: Math.min(LIGNES - 1, Math.floor(p.y)) };
+}
+function placeEn(salle, c, r) { return salle.places.find(p => p.c === c && p.r === r); }
+function libre(salle, c, r) {
+  return c >= 0 && r >= 0 && c < COLS && r < LIGNES && !placeEn(salle, c, r);
+}
+
+/* --- Interactions à la souris --- */
+let glissement = null;          // { type, ... }
+let rectSel = null;
+
+canevas.addEventListener("contextmenu", e => {
+  const cl = classeCourante();
+  const pl = e.target.closest(".place");
+  const mo = e.target.closest(".mobilier");
+  if (pl) {
+    e.preventDefault();
+    instantane();
+    cl.salle.places = cl.salle.places.filter(p => p.id !== pl.dataset.id);
+    selection.delete(pl.dataset.id);
+    apresModifSalle();
+  } else if (mo) {
+    e.preventDefault();
+    instantane();
+    cl.salle.mobilier = cl.salle.mobilier.filter(m => m.id !== mo.dataset.id);
+    apresModifSalle();
+  }
+});
+
+canevas.addEventListener("dblclick", e => {
+  const mo = e.target.closest(".mobilier");
+  if (!mo) return;
+  const cl = classeCourante();
+  const m = cl.salle.mobilier.find(x => x.id === mo.dataset.id);
+  const nom = prompt("Étiquette :", m.nom);
+  if (!nom || !nom.trim()) return;
+  instantane(); m.nom = nom.trim(); sauver(); rendreEditeur();
+});
+
+canevas.addEventListener("mousedown", e => {
+  if (e.button !== 0) return;
+  const cl = classeCourante(); if (!cl) return;
+  const dep = coordCanevas(e);
+  const cell = caseSous(e);
+
+  const poigneeZone = e.target.closest(".zone .poignee");
+  const etiqZone = e.target.closest(".zone .etiq");
+  const poigneeMob = e.target.closest(".mobilier .poignee");
+  const elMob = e.target.closest(".mobilier");
+  const elPlace = e.target.closest(".place");
+
+  // 1) Zones : déplacement par l'étiquette, redimensionnement par la poignée
+  if (poigneeZone || etiqZone) {
+    const zid = (poigneeZone || etiqZone).closest(".zone").dataset.id;
+    const z = cl.salle.zones.find(x => x.id === zid);
+    instantane();
+    glissement = { type: poigneeZone ? "redim-zone" : "bouge-zone", obj: z, dep, orig: { c: z.c, r: z.r, w: z.w, h: z.h },
+                   el: canevas.querySelector(`.zone[data-id="${zid}"]`) };
+    e.preventDefault(); return;
+  }
+  // 2) Mobilier
+  if (poigneeMob || elMob) {
+    const mid = elMob.dataset.id;
+    const m = cl.salle.mobilier.find(x => x.id === mid);
+    instantane();
+    glissement = { type: poigneeMob ? "redim-mob" : "bouge-mob", obj: m, dep, orig: { c: m.c, r: m.r, w: m.w, h: m.h }, el: elMob };
+    e.preventDefault(); return;
+  }
+  // 3) Outils de création
+  if (outil === "place") {
+    if (libre(cl.salle, cell.c, cell.r)) {
+      instantane();
+      cl.salle.places.push({ id: uid("pl"), c: cell.c, r: cell.r });
+      sauver(); rendreEditeur(); rendreCompteur();
+    }
+    return;
+  }
+  if (outil === "double") {
+    const droite = libre(cl.salle, cell.c + 1, cell.r);
+    const gauche = libre(cl.salle, cell.c - 1, cell.r);
+    if (libre(cl.salle, cell.c, cell.r) && (droite || gauche)) {
+      instantane();
+      cl.salle.places.push({ id: uid("pl"), c: cell.c, r: cell.r });
+      cl.salle.places.push({ id: uid("pl"), c: droite ? cell.c + 1 : cell.c - 1, r: cell.r });
+      sauver(); rendreEditeur(); rendreCompteur();
+    }
+    return;
+  }
+  if (outil === "zone" || outil === "mobilier") {
+    glissement = { type: "creer-" + outil, dep };
+    rectSel = document.createElement("div");
+    rectSel.id = "rectangle-sel";
+    canevas.appendChild(rectSel);
+    e.preventDefault(); return;
+  }
+  // 4) Outil sélection : déplacer une place, ou tracer un rectangle de sélection
+  if (elPlace) {
+    const id = elPlace.dataset.id;
+    if (!selection.has(id)) {
+      if (!e.shiftKey) selection.clear();
+      selection.add(id);
+      rendreEditeur();
+    }
+    instantane();
+    glissement = { type: "bouge-places", dep, dc: 0, dr: 0, ids: Array.from(selection) };
+    e.preventDefault(); return;
+  }
+  if (!e.shiftKey) { selection.clear(); rendreEditeur(); }
+  glissement = { type: "rect-sel", dep, shift: e.shiftKey, base: new Set(selection) };
+  rectSel = document.createElement("div");
+  rectSel.id = "rectangle-sel";
+  canevas.appendChild(rectSel);
+  e.preventDefault();
+});
+
+window.addEventListener("mousemove", e => {
+  if (!glissement) return;
+  const cl = classeCourante();
+  const p = coordCanevas(e);
+
+  if (glissement.type === "bouge-places") {
+    const dc = Math.round(p.x - glissement.dep.x);
+    const dr = Math.round(p.y - glissement.dep.y);
+    if (dc === glissement.dc && dr === glissement.dr) return;
+    if (deplacementValide(cl.salle, glissement.ids, dc, dr)) {
+      glissement.dc = dc; glissement.dr = dr;
+      glissement.ids.forEach(id => {
+        const el = canevas.querySelector(`.place[data-id="${id}"]`);
+        if (el) el.style.transform = `translate(${dc * 100}%, ${dr * 100}%)`;
+      });
+    }
+    return;
+  }
+  if (glissement.type === "rect-sel" || glissement.type === "creer-zone" || glissement.type === "creer-mobilier") {
+    majRectangle(glissement.dep, p);
+    return;
+  }
+  if (glissement.type === "bouge-zone" || glissement.type === "bouge-mob") {
+    const o = glissement.orig, obj = glissement.obj;
+    obj.c = Math.max(0, Math.min(COLS - o.w, o.c + Math.round(p.x - glissement.dep.x)));
+    obj.r = Math.max(0, Math.min(LIGNES - o.h, o.r + Math.round(p.y - glissement.dep.y)));
+    appliquerRect(glissement.el, obj);
+    return;
+  }
+  if (glissement.type === "redim-zone" || glissement.type === "redim-mob") {
+    const o = glissement.orig, obj = glissement.obj;
+    obj.w = Math.max(1, Math.min(COLS - obj.c, Math.round(o.w + (p.x - glissement.dep.x))));
+    obj.h = Math.max(1, Math.min(LIGNES - obj.r, Math.round(o.h + (p.y - glissement.dep.y))));
+    appliquerRect(glissement.el, obj);
+    return;
+  }
+});
+
+window.addEventListener("mouseup", e => {
+  if (!glissement) return;
+  const cl = classeCourante();
+  const p = coordCanevas(e);
+  const g = glissement;
+  glissement = null;
+
+  if (g.type === "bouge-places") {
+    if (g.dc || g.dr) {
+      g.ids.forEach(id => {
+        const pl = cl.salle.places.find(x => x.id === id);
+        if (pl) { pl.c += g.dc; pl.r += g.dr; }
+      });
+      apresModifSalle();
+    } else {
+      pileAnnuler.pop();               // aucun mouvement : on retire l'instantané inutile
+      rendreEditeur();
+    }
+    return;
+  }
+  if (g.type === "rect-sel") {
+    const r = rectNormalise(g.dep, p);
+    if (!g.shift) selection = new Set(g.base);
+    cl.salle.places.forEach(pl => {
+      const cx = pl.c + 0.5, cy = pl.r + 0.5;
+      if (cx >= r.x1 && cx <= r.x2 && cy >= r.y1 && cy <= r.y2) selection.add(pl.id);
+    });
+    retirerRectangle();
+    rendreEditeur();
+    return;
+  }
+  if (g.type === "creer-zone" || g.type === "creer-mobilier") {
+    const r = rectNormalise(g.dep, p);
+    retirerRectangle();
+    const c = Math.floor(r.x1), rr = Math.floor(r.y1);
+    const w = Math.max(1, Math.ceil(r.x2) - c), h = Math.max(1, Math.ceil(r.y2) - rr);
+    if (g.type === "creer-zone") {
+      const nom = prompt("Nom de la zone :", "Devant");
+      if (nom && nom.trim()) {
+        instantane();
+        cl.salle.zones.push({ id: uid("zo"), nom: nom.trim(), c: c, r: rr, w: w, h: h,
+                              couleur: COULEURS_ZONES[cl.salle.zones.length % COULEURS_ZONES.length] });
+      }
+    } else {
+      const nom = prompt("Étiquette du mobilier (bureau, armoire, porte, évier…) :", "Armoire");
+      if (nom && nom.trim()) {
+        instantane();
+        cl.salle.mobilier.push({ id: uid("mo"), nom: nom.trim(), c: c, r: rr, w: w, h: h });
+      }
+    }
+    apresModifSalle();
+    return;
+  }
+  // Zones et mobilier déplacés / redimensionnés
+  apresModifSalle();
+});
+
+function deplacementValide(salle, ids, dc, dr) {
+  const bouges = new Set(ids);
+  return ids.every(id => {
+    const p = salle.places.find(x => x.id === id);
+    if (!p) return true;
+    const nc = p.c + dc, nr = p.r + dr;
+    if (nc < 0 || nr < 0 || nc >= COLS || nr >= LIGNES) return false;
+    const occupant = placeEn(salle, nc, nr);
+    return !occupant || bouges.has(occupant.id);
+  });
+}
+function rectNormalise(a, b) {
+  return { x1: Math.min(a.x, b.x), y1: Math.min(a.y, b.y), x2: Math.max(a.x, b.x), y2: Math.max(a.y, b.y) };
+}
+function majRectangle(a, b) {
+  if (!rectSel) return;
+  const r = rectNormalise(a, b);
+  rectSel.style.left = (r.x1 / COLS * 100) + "%";
+  rectSel.style.top = (r.y1 / LIGNES * 100) + "%";
+  rectSel.style.width = ((r.x2 - r.x1) / COLS * 100) + "%";
+  rectSel.style.height = ((r.y2 - r.y1) / LIGNES * 100) + "%";
+}
+function retirerRectangle() { if (rectSel) { rectSel.remove(); rectSel = null; } }
+function appliquerRect(el, o) {
+  if (!el) return;
+  el.style.left = (o.c / COLS * 100) + "%";
+  el.style.top = (o.r / LIGNES * 100) + "%";
+  el.style.width = (o.w / COLS * 100) + "%";
+  el.style.height = (o.h / LIGNES * 100) + "%";
+}
+
+/* --- Boutons de l'éditeur --- */
+function supprimerSelection() {
+  const cl = classeCourante();
+  if (!cl || !selection.size) return;
+  instantane();
+  cl.salle.places = cl.salle.places.filter(p => !selection.has(p.id));
+  selection.clear();
+  apresModifSalle();
+  rendreCompteur();
+}
+$("#btn-supprimer-sel").addEventListener("click", supprimerSelection);
+
+$("#btn-dupliquer-rangee").addEventListener("click", () => {
+  const cl = classeCourante();
+  if (!cl || !selection.size) return;
+  const sources = cl.salle.places.filter(p => selection.has(p.id));
+  const cibles = sources.filter(p => p.r + 1 < LIGNES && libre(cl.salle, p.c, p.r + 1));
+  if (!cibles.length) { alert("Pas de place libre une ligne plus bas."); return; }
+  instantane();
+  const nouvelles = cibles.map(p => ({ id: uid("pl"), c: p.c, r: p.r + 1 }));
+  cl.salle.places.push.apply(cl.salle.places, nouvelles);
+  selection = new Set(nouvelles.map(p => p.id));   // la copie devient la sélection : on peut enchaîner
+  apresModifSalle();
+  rendreCompteur();
+});
+
+$$("[data-preset]").forEach(b => b.addEventListener("click", () => {
+  const cl = classeCourante(); if (!cl) return;
+  if (!confirm("Remplacer le plan de salle actuel par cette disposition ?\nLes places fixes et les zones de cette classe seront perdues.")) return;
+  instantane();
+  cl.salle = presetSalle(b.dataset.preset);
+  selection.clear();
+  apresModifSalle();
+  rendreCompteur();
+}));
+
+/* --- Raccourcis clavier --- */
+document.addEventListener("keydown", e => {
+  const dansChamp = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !dansChamp) { e.preventDefault(); annuler(); return; }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y" && !dansChamp) { e.preventDefault(); retablir(); return; }
+  if ((e.key === "Delete" || e.key === "Backspace") && ecranActif === "salle" && !dansChamp && selection.size) {
+    e.preventDefault(); supprimerSelection();
+  }
+  if (e.key === "Escape" && ecranActif === "salle") { selection.clear(); rendreEditeur(); }
+});
+
+/* ==========================================================================
+   6. ALGORITHME DE TIRAGE
+   ========================================================================== */
+
+/**
+ * Calcule une attribution élève → place.
+ * Renvoie soit { ok:false, erreurs:[…] } (contrainte dure impossible : on ne lance rien),
+ * soit { ok:true, attribution:{}, violations:[…] } (violations = contraintes souples non tenues).
+ */
+function calculerTirage(cl, options) {
+  const salle = cl.salle;
+  const places = salle.places;
+  const presents = elevesPresents(cl);
+  const nomDe = id => { const e = cl.eleves.find(x => x.id === id); return e ? e.nom : "?"; };
+
+  /* --- 1. Contrôles bloquants ------------------------------------------ */
+  const erreurs = [];
+  if (!presents.length) erreurs.push("Aucun élève présent dans cette classe.");
+  if (!places.length) erreurs.push("Le plan de salle ne contient aucune place.");
+  if (presents.length > places.length) {
+    erreurs.push(`Il y a ${presents.length} élèves présents pour seulement ${places.length} places : ajoutez des places ou marquez des élèves absents.`);
+  }
+  problemesZones(cl).forEach(m => erreurs.push(m));
+  if (erreurs.length) return { ok: false, erreurs: erreurs };
+
+  /* --- 2. Places fixes : posées d'office, hors du pool ------------------ */
+  const fixes = {};
+  presents.forEach(e => {
+    const pid = cl.regles.fixes[e.id];
+    if (pid && places.some(p => p.id === pid)) fixes[e.id] = pid;
+  });
+
+  const parZone = new Map();          // zoneId → tableau de places
+  salle.zones.forEach(z => parZone.set(z.id, placesDeZone(salle, z)));
+
+  const avecZone = [], libresEleves = [];
+  presents.forEach(e => {
+    if (fixes[e.id]) return;
+    const zid = cl.regles.zones[e.id];
+    if (zid && parZone.has(zid)) avecZone.push({ eleve: e, zoneId: zid });
+    else libresEleves.push(e);
+  });
+
+  /* --- 3. Voisinage des places (calculé une seule fois) ----------------- */
+  const voisines = new Map();
+  places.forEach(p => voisines.set(p.id, new Set()));
+  for (let i = 0; i < places.length; i++) {
+    for (let j = i + 1; j < places.length; j++) {
+      if (cotesACote(places[i], places[j])) {
+        voisines.get(places[i].id).add(places[j].id);
+        voisines.get(places[j].id).add(places[i].id);
+      }
+    }
+  }
+
+  /* --- 4. Mémoire du dernier tirage archivé ---------------------------- */
+  const precedent = cl.historique.length ? cl.historique[0].attribution : null;
+  let pairesPrecedentes = null;
+  if (precedent) {
+    pairesPrecedentes = new Set();
+    const ids = Object.keys(precedent);
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const pa = precedent[ids[i]], pb = precedent[ids[j]];
+        if (voisines.has(pa) && voisines.get(pa).has(pb)) pairesPrecedentes.add(clePaire(ids[i], ids[j]));
+      }
+    }
+  }
+  const memePlace = options.eviterMemePlace && precedent;
+  const memesVoisins = options.eviterMemesVoisins && pairesPrecedentes && pairesPrecedentes.size;
+
+  /* --- 5. Évaluation des contraintes souples --------------------------- */
+  function evaluer(attr) {
+    const viol = [];
+    // a) séparations demandées par l'enseignant
+    cl.regles.separations.forEach(p => {
+      const pa = attr[p[0]], pb = attr[p[1]];
+      if (pa && pb && voisines.get(pa) && voisines.get(pa).has(pb)) {
+        viol.push(`${nomDe(p[0])} et ${nomDe(p[1])} sont côte à côte.`);
+      }
+    });
+    // b) même place qu'au dernier tirage
+    if (memePlace) {
+      presents.forEach(e => {
+        if (fixes[e.id]) return;                       // les places fixes sont exclues par nature
+        if (precedent[e.id] && precedent[e.id] === attr[e.id]) viol.push(`${e.nom} retrouve sa place précédente.`);
+      });
+    }
+    // c) mêmes voisins qu'au dernier tirage
+    if (memesVoisins) {
+      const parPlace = new Map();
+      Object.keys(attr).forEach(eid => parPlace.set(attr[eid], eid));
+      parPlace.forEach((eid, pid) => {
+        voisines.get(pid).forEach(autre => {
+          const eid2 = parPlace.get(autre);
+          if (!eid2 || eid2 <= eid) return;            // chaque paire une seule fois
+          if (fixes[eid] && fixes[eid2]) return;       // rien à y faire : les deux sont figés
+          if (pairesPrecedentes.has(clePaire(eid, eid2))) {
+            viol.push(`${nomDe(eid)} et ${nomDe(eid2)} sont de nouveau voisins.`);
+          }
+        });
+      });
+    }
+    return viol;
+  }
+
+  /* --- 6. Une tentative : zones d'abord, puis Fisher-Yates ------------- */
+  function tenter() {
+    const attr = Object.assign({}, fixes);
+    const occupees = new Set(Object.values(fixes));
+
+    // Du plus contraint au moins contraint : la zone la plus serrée passe en premier.
+    const ordreZones = avecZone.map(x => ({
+      eleve: x.eleve, zoneId: x.zoneId,
+      dispo: parZone.get(x.zoneId).filter(p => !occupees.has(p.id)).length
+    })).sort((a, b) => a.dispo - b.dispo);
+
+    for (const item of ordreZones) {
+      const dispo = parZone.get(item.zoneId).filter(p => !occupees.has(p.id));
+      if (!dispo.length) return null;                  // zone saturée : tentative perdue
+      const choix = dispo[aleaEntier(dispo.length)];
+      attr[item.eleve.id] = choix.id;
+      occupees.add(choix.id);
+    }
+
+    const restants = melanger(libresEleves.slice());
+    const restantes = melanger(places.filter(p => !occupees.has(p.id)));
+    restants.forEach((e, i) => { attr[e.id] = restantes[i].id; });
+    return attr;
+  }
+
+  /* --- 7. Jusqu'à 300 tentatives, on garde la meilleure ---------------- */
+  let meilleure = null, meilleuresViol = null;
+  for (let essai = 0; essai < 300; essai++) {
+    const attr = tenter();
+    if (!attr) continue;
+    const viol = evaluer(attr);
+    if (!meilleure || viol.length < meilleuresViol.length) { meilleure = attr; meilleuresViol = viol; }
+    if (!viol.length) break;
+  }
+  if (!meilleure) {
+    return { ok: false, erreurs: ["Les contraintes de zones ne peuvent pas être satisfaites avec ce plan de salle. Vérifiez que chaque zone contient assez de places."] };
+  }
+
+  /* --- 8. Réparation locale de la meilleure tentative ------------------ */
+  if (meilleuresViol.length) {
+    meilleuresViol = reparer(meilleure, meilleuresViol);
+  }
+
+  function reparer(attr, viol) {
+    const mobiles = presents.filter(e => !fixes[e.id]).map(e => e.id);
+    if (mobiles.length < 2) return viol;
+    const zoneOk = (eid, pid) => {
+      const zid = cl.regles.zones[eid];
+      if (!zid || !parZone.has(zid)) return true;
+      return parZone.get(zid).some(p => p.id === pid);
+    };
+    let courant = viol;
+    for (let i = 0; i < 2500 && courant.length; i++) {
+      const a = mobiles[aleaEntier(mobiles.length)];
+      const occupees = new Set(Object.values(attr));
+      const vides = places.filter(p => !occupees.has(p.id));
+      // Une fois sur trois, on tente de glisser l'élève sur une place restée vide.
+      const versVide = vides.length && aleaEntier(3) === 0;
+      const b = versVide ? null : mobiles[aleaEntier(mobiles.length)];
+      if (!versVide && (b === a || !b)) continue;
+      const pa = attr[a];
+      const pb = versVide ? vides[aleaEntier(vides.length)].id : attr[b];
+      if (!zoneOk(a, pb)) continue;
+      if (!versVide && !zoneOk(b, pa)) continue;
+      attr[a] = pb;
+      if (!versVide) attr[b] = pa;
+      const suivant = evaluer(attr);
+      if (suivant.length <= courant.length) courant = suivant;
+      else { attr[a] = pa; if (!versVide) attr[b] = pb; }
+    }
+    return courant;
+  }
+
+  return { ok: true, attribution: meilleure, violations: meilleuresViol };
+}
+
+function clePaire(a, b) { return a < b ? a + "|" + b : b + "|" + a; }
+
+/** Archive un tirage. Une relance le même jour remplace l'entrée du jour. */
+function archiverTirage(cl, attribution) {
+  const maintenant = new Date();
+  const noms = {};
+  Object.keys(attribution).forEach(eid => {
+    const e = cl.eleves.find(x => x.id === eid);
+    noms[eid] = e ? e.nom : "?";
+  });
+  const entree = { id: uid("h"), date: maintenant.toISOString(), attribution: attribution, noms: noms };
+  if (cl.historique.length && jourIso(new Date(cl.historique[0].date)) === jourIso(maintenant)) {
+    cl.historique[0] = entree;                    // relance du jour : on remplace
+  } else {
+    cl.historique.unshift(entree);
+  }
+  cl.historique = cl.historique.slice(0, MAX_HISTORIQUE);
+  sauver();
+}
+
+/* ==========================================================================
+   7. ÉCRAN TIRAGE : RENDU ET ANIMATION
+   ========================================================================== */
+
+const pioche = $("#pioche");
+let coucheCartes = $("#couche-cartes");
+let tirageEnCours = false;
+let jetonTirage = 0;
+let dernierRendu = null;          // { classeId, attribution, noms, date }
+
+/**
+ * Le plan doit tenir en entier dans la scène : sinon il recouvrirait le bouton
+ * « TIRER AU SORT » sur un écran 16/9. On calcule donc sa largeur à la main.
+ */
+function ajusterTaillePlan(vue) {
+  const zone = $("#plan-zone").getBoundingClientRect();
+  if (!zone.width || !zone.height) return;
+  const banniere = $("#plan-cadre .bandeau-tableau").offsetHeight || 0;
+  const dispoH = zone.height - banniere;
+  const largeur = Math.min(zone.width, dispoH * vue.w / vue.h);
+  $("#plan-cadre").style.width = Math.max(240, Math.floor(largeur)) + "px";
+}
+
+/** (Re)construit le plan projeté : mobilier + places vides, sans zones. */
+function rendrePlanTirage() {
+  const cl = classeCourante(); if (!cl) return;
+  const vue = vueSalle(cl.salle);
+  const plan = $("#plan");
+  plan.style.aspectRatio = vue.w + " / " + vue.h;
+  ajusterTaillePlan(vue);
+  plan.innerHTML = "";
+  const { num } = placesNumerotees(cl.salle);
+  cl.salle.mobilier.forEach(m => {
+    const d = document.createElement("div");
+    d.className = "mobilier";
+    d.style.left = ((m.c - vue.c) / vue.w * 100) + "%";
+    d.style.top = ((m.r - vue.r) / vue.h * 100) + "%";
+    d.style.width = (m.w / vue.w * 100) + "%";
+    d.style.height = (m.h / vue.h * 100) + "%";
+    d.style.cursor = "default";
+    d.textContent = m.nom;
+    plan.appendChild(d);
+  });
+  cl.salle.places.forEach(p => plan.appendChild(elementPlace(p, num.get(p.id), false, vue)));
+  coucheCartes = document.createElement("div");
+  coucheCartes.id = "couche-cartes";
+  plan.appendChild(coucheCartes);
+}
+
+function preparerTirage() {
+  const cl = classeCourante(); if (!cl) return;
+  interrompreTirage();
+  $("#tirage-titre").textContent = cl.nom;
+  rendrePlanTirage();
+  $("#opt-vitesse").value = etat.options.vitesse;
+  $("#opt-suspense").checked = etat.options.suspense;
+  $("#opt-place").checked = etat.options.eviterMemePlace;
+  $("#opt-voisins").checked = etat.options.eviterMemesVoisins;
+  $("#btn-reutiliser").disabled = !cl.historique.length;
+  $("#actions-fin").classList.remove("visible");
+  $("#btn-tirer").disabled = false;
+  majLegendePioche(elevesPresents(cl).length);
+  pioche.classList.remove("vide");
+  const pbs = problemesZones(cl);
+  const presents = elevesPresents(cl).length;
+  if (presents > cl.salle.places.length) pbs.unshift(`Il y a ${presents} élèves présents pour seulement ${cl.salle.places.length} places.`);
+  if (pbs.length) afficherBandeau("Tirage impossible pour l'instant :", pbs);
+  else masquerBandeau();
+}
+
+function majLegendePioche(n) {
+  $("#pioche-legende").textContent = n > 0 ? n + (n > 1 ? " cartes" : " carte") : "";
+  pioche.classList.toggle("vide", n <= 0);
+}
+
+function afficherBandeau(titre, lignes) {
+  const b = $("#bandeau-tirage");
+  b.innerHTML = `<strong>${echapper(titre)}</strong><ul>${lignes.map(l => `<li>${echapper(l)}</li>`).join("")}</ul>`;
+  b.classList.add("visible");
+}
+function masquerBandeau() { $("#bandeau-tirage").classList.remove("visible"); }
+
+function viderCartes() { if (coucheCartes) coucheCartes.innerHTML = ""; }
+
+function interrompreTirage() {
+  jetonTirage++;
+  tirageEnCours = false;
+  pioche.classList.remove("melange", "attente");
+  $("#btn-tirer").disabled = false;
+}
+
+/* --- Fabrication d'une carte --- */
+const POLICE = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const ctxMesure = document.createElement("canvas").getContext("2d");
+
+/** Taille de police qui fait tenir le prénom dans la carte — mesurée, jamais estimée. */
+function tailleTexte(nom, w, h) {
+  const t0 = Math.min(h * 0.36, w * 0.42);
+  const large = w * 0.86;
+  ctxMesure.font = "800 " + t0 + "px " + POLICE;
+  const mesure = ctxMesure.measureText(nom).width;
+  const t = (mesure > large) ? t0 * large / mesure : t0;
+  return Math.max(6, t);
+}
+
+function fabriquerCarte(nom, w, h) {
+  const vol = document.createElement("div");
+  vol.className = "vol";
+  vol.style.width = w + "px";
+  vol.style.height = h + "px";
+  const arc = document.createElement("div");
+  arc.className = "arc";
+  const carte = document.createElement("div");
+  carte.className = "carte";
+  const avant = document.createElement("div");
+  avant.className = "face avant";
+  avant.textContent = nom;
+  avant.style.background = couleurEleve(nom);
+  avant.style.fontSize = tailleTexte(nom, w, h) + "px";
+  const dos = document.createElement("div");
+  dos.className = "face dos";
+  carte.appendChild(avant);
+  carte.appendChild(dos);
+  arc.appendChild(carte);
+  vol.appendChild(arc);
+  return { vol: vol, arc: arc, carte: carte };
+}
+
+/** Position d'une place, en pixels, dans le repère de #plan. */
+function positionPlace(placeId) {
+  const el = $(`#plan .place[data-id="${placeId}"]`);
+  if (!el) return null;
+  const rp = $("#plan").getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  return { x: r.left - rp.left, y: r.top - rp.top, w: r.width, h: r.height };
+}
+/** Position de la pioche, dans le même repère, pour une carte de w × h. */
+function positionPioche(w, h) {
+  const rp = $("#plan").getBoundingClientRect();
+  const rd = pioche.getBoundingClientRect();
+  return { x: rd.left - rp.left + (rd.width - w) / 2, y: rd.top - rp.top + (rd.height - h) / 2 };
+}
+
+/** Pose une carte instantanément (rendu statique, historique, réutilisation). */
+function poserCarte(nom, placeId) {
+  const dest = positionPlace(placeId);
+  if (!dest) return null;
+  const c = fabriquerCarte(nom, dest.w, dest.h);
+  c.vol.style.transform = `translateX(${dest.x}px)`;
+  c.arc.style.transform = `translateY(${dest.y}px)`;
+  coucheCartes.appendChild(c.vol);
+  return c;
+}
+
+/** Fait voler une carte de la pioche vers sa place. */
+async function volCarte(nom, placeId) {
+  const dest = positionPlace(placeId);
+  if (!dest) return;
+  const c = fabriquerCarte(nom, dest.w, dest.h);
+  const src = positionPioche(dest.w, dest.h);
+  coucheCartes.appendChild(c.vol);
+
+  const arriverA = () => {
+    c.vol.style.transform = `translateX(${dest.x}px)`;
+    c.arc.style.transform = `translateY(${dest.y}px)`;
+    c.carte.style.transform = "none";
+    const pl = $(`#plan .place[data-id="${placeId}"]`);
+    if (pl) { pl.classList.remove("eclat"); void pl.offsetWidth; pl.classList.add("eclat"); }
+  };
+
+  // Animations réduites : la carte apparaît simplement, sans vol.
+  if (animationsReduites()) {
+    arriverA();
+    c.vol.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
+    return;
+  }
+
+  c.vol.style.transform = `translateX(${src.x}px)`;
+  c.arc.style.transform = `translateY(${src.y}px)`;
+  c.carte.style.transform = "rotateY(180deg)";
+
+  const duree = 350;
+  const angle = aleaEntier(37) - 18;
+  const a1 = c.vol.animate(
+    [{ transform: `translateX(${src.x}px)` }, { transform: `translateX(${dest.x}px)` }],
+    { duration: duree, easing: "cubic-bezier(.22,.61,.36,1)", fill: "forwards" });
+  const a2 = c.arc.animate(                       // easing différent → trajectoire légèrement courbe
+    [{ transform: `translateY(${src.y}px)` }, { transform: `translateY(${dest.y}px)` }],
+    { duration: duree, easing: "cubic-bezier(.45,.05,.55,.95)", fill: "forwards" });
+  const a3 = c.carte.animate([
+    { transform: `rotate(${angle}deg) rotateY(180deg)` },
+    { transform: `rotate(${(angle * 0.3).toFixed(2)}deg) rotateY(180deg)`, offset: 0.62 },
+    { transform: "rotate(0deg) rotateY(0deg)" }
+  ], { duration: duree, easing: "cubic-bezier(.22,.61,.36,1)", fill: "forwards" });
+
+  try { await Promise.all([a1.finished, a2.finished, a3.finished]); } catch (e) { return; }
+  arriverA();
+  a1.cancel(); a2.cancel(); a3.cancel();
+  // Petit rebond d'échelle à l'atterrissage
+  c.carte.animate(
+    [{ transform: "scale(1)" }, { transform: "scale(1.08)", offset: 0.5 }, { transform: "scale(1)" }],
+    { duration: 220, easing: "ease-out" });
+}
+
+/** Petite vague sur toutes les cartes posées, pour clore le tirage. */
+function vague() {
+  if (animationsReduites()) return;
+  const cartes = $$(".carte", coucheCartes);
+  cartes.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+  cartes.forEach((el, i) => {
+    el.animate(
+      [{ transform: "translateY(0) scale(1)" }, { transform: "translateY(-9px) scale(1.04)", offset: 0.45 }, { transform: "translateY(0) scale(1)" }],
+      { duration: 420, delay: i * 22, easing: "ease-in-out" });
+  });
+}
+
+/* --- Lancement du tirage --- */
+async function lancerTirage() {
+  const cl = classeCourante();
+  if (!cl || tirageEnCours) return;
+
+  const resultat = calculerTirage(cl, etat.options);
+  if (!resultat.ok) {
+    afficherBandeau("Tirage impossible :", resultat.erreurs);
+    return;
+  }
+  masquerBandeau();
+
+  const jeton = ++jetonTirage;
+  tirageEnCours = true;
+  $("#btn-tirer").disabled = true;
+  $("#actions-fin").classList.remove("visible");
+  rendrePlanTirage();
+
+  // L'ordre d'apparition est mélangé indépendamment du calcul :
+  // fixes, zones et reste sont indiscernables à l'écran.
+  const ordre = melanger(Object.keys(resultat.attribution));
+  const nomDe = id => { const e = cl.eleves.find(x => x.id === id); return e ? e.nom : "?"; };
+
+  majLegendePioche(ordre.length);
+  pioche.classList.add("melange");
+  await pause(animationsReduites() ? 120 : 600);
+  pioche.classList.remove("melange");
+  if (jeton !== jetonTirage) return;
+
+  const intervalle = { lent: 200, normal: 120, rapide: 60 }[etat.options.vitesse] || 120;
+  const dernier = ordre.length - 1;
+
+  for (let i = 0; i < ordre.length; i++) {
+    if (jeton !== jetonTirage) return;
+    if (i === dernier && etat.options.suspense && ordre.length > 1) {
+      pioche.classList.add("attente");
+      await pause(1500);
+      pioche.classList.remove("attente");
+      if (jeton !== jetonTirage) return;
+    }
+    volCarte(nomDe(ordre[i]), resultat.attribution[ordre[i]]);
+    majLegendePioche(dernier - i);
+    if (i < dernier) await pause(intervalle);
+  }
+
+  await pause(500);
+  if (jeton !== jetonTirage) return;
+  vague();
+
+  tirageEnCours = false;
+  $("#btn-tirer").disabled = false;
+  $("#actions-fin").classList.add("visible");
+
+  archiverTirage(cl, resultat.attribution);
+  dernierRendu = { classeId: cl.id, attribution: resultat.attribution, noms: cl.historique[0].noms, date: cl.historique[0].date };
+  if (resultat.violations.length) {
+    afficherBandeau("Le plan est fait, mais ces règles n'ont pas pu être respectées :", resultat.violations);
+  }
+  if (ecranActif === "classes") rendreHistorique();
+}
+
+/** Réaffiche une attribution sans animation. */
+function afficherStatique(cl, attribution, noms, dateIso) {
+  interrompreTirage();
+  rendrePlanTirage();
+  Object.keys(attribution).forEach(eid => {
+    const e = cl.eleves.find(x => x.id === eid);
+    const nom = (noms && noms[eid]) || (e ? e.nom : null);
+    if (nom) poserCarte(nom, attribution[eid]);
+  });
+  majLegendePioche(0);
+  $("#actions-fin").classList.add("visible");
+  dernierRendu = { classeId: cl.id, attribution: attribution, noms: noms || null, date: dateIso || new Date().toISOString() };
+}
+
+/* --- Boutons de l'écran Tirage --- */
+$("#btn-tirer").addEventListener("click", lancerTirage);
+$("#btn-relancer").addEventListener("click", lancerTirage);
+$("#btn-quitter-tirage").addEventListener("click", () => allerEcran("classes"));
+$("#btn-options-tirage").addEventListener("click", () => $("#panneau-options").classList.toggle("ouvert"));
+$("#btn-plein-ecran").addEventListener("click", () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+});
+$("#opt-vitesse").addEventListener("change", e => { etat.options.vitesse = e.target.value; sauver(); });
+$("#opt-suspense").addEventListener("change", e => { etat.options.suspense = e.target.checked; sauver(); });
+$("#opt-place").addEventListener("change", e => { etat.options.eviterMemePlace = e.target.checked; sauver(); });
+$("#opt-voisins").addEventListener("change", e => { etat.options.eviterMemesVoisins = e.target.checked; sauver(); });
+$("#btn-reutiliser").addEventListener("click", () => {
+  const cl = classeCourante();
+  if (!cl || !cl.historique.length) return;
+  const h = cl.historique[0];
+  afficherStatique(cl, h.attribution, h.noms, h.date);
+  $("#panneau-options").classList.remove("ouvert");
+  masquerBandeau();
+});
+
+/* ==========================================================================
+   8. HISTORIQUE, EXPORTS, IMPRESSION
+   ========================================================================== */
+
+function rendreHistorique() {
+  const cl = classeCourante();
+  const hote = $("#liste-historique");
+  if (!cl.historique.length) { hote.innerHTML = `<p class="discret">Aucun tirage archivé pour cette classe.</p>`; return; }
+  hote.innerHTML = "";
+  cl.historique.forEach(h => {
+    const n = Object.keys(h.attribution).length;
+    const d = document.createElement("div");
+    d.className = "entree-histo";
+    d.innerHTML =
+      `<span class="titre">Plan du ${echapper(dateLisible(h.date))}</span>` +
+      `<span class="discret">${n} élève${n > 1 ? "s" : ""}</span>` +
+      `<span class="droite">` +
+      `<button class="btn mini" data-act="voir">Réafficher</button>` +
+      `<button class="btn mini" data-act="imp">Imprimer</button>` +
+      `<button class="btn mini danger" data-act="sup">Supprimer</button>` +
+      `</span>`;
+    d.querySelector('[data-act="voir"]').addEventListener("click", () => {
+      allerEcran("tirage");
+      // Le plan doit être mesurable : on attend que l'écran soit affiché.
+      requestAnimationFrame(() => afficherStatique(cl, h.attribution, h.noms, h.date));
+    });
+    d.querySelector('[data-act="imp"]').addEventListener("click", () => imprimerPlan(cl, h.attribution, h.noms, h.date));
+    d.querySelector('[data-act="sup"]').addEventListener("click", () => {
+      if (!confirm(`Supprimer le plan du ${dateLisible(h.date)} ?`)) return;
+      cl.historique = cl.historique.filter(x => x.id !== h.id);
+      sauver(); rendreHistorique();
+    });
+    hote.appendChild(d);
+  });
+}
+
+/* --- Export / import JSON --- */
+function telecharger(nomFichier, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nomFichier;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+$("#btn-export-json").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(etat, null, 2)], { type: "application/json" });
+  telecharger("plan-de-classe-" + jourIso(new Date()) + ".json", blob);
+});
+$("#btn-import-json").addEventListener("click", () => $("#fichier-import").click());
+$("#fichier-import").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const lecteur = new FileReader();
+  lecteur.onload = () => {
+    try {
+      const donnees = JSON.parse(lecteur.result);
+      if (!donnees || !Array.isArray(donnees.classes)) throw new Error("format");
+      const n = donnees.classes.length;
+      if (!confirm(`Importer ${n} classe${n > 1 ? "s" : ""} ?\nToutes les données actuelles de ce navigateur seront écrasées.`)) return;
+      etat = normaliser(donnees);
+      pileAnnuler.length = 0; pileRetablir.length = 0;
+      selection.clear();
+      sauver();
+      allerEcran("classes");
+      rendreClasses();
+    } catch (err) {
+      alert("Ce fichier n'est pas un export « Plan de Classe » valide.");
+    }
+  };
+  lecteur.readAsText(f);
+  e.target.value = "";
+});
+
+/* --- Impression : une page A4 paysage --- */
+function imprimerPlan(cl, attribution, noms, dateIso) {
+  const feuille = $("#feuille-impression");
+  const parPlace = new Map();
+  Object.keys(attribution || {}).forEach(eid => {
+    const e = cl.eleves.find(x => x.id === eid);
+    const nom = (noms && noms[eid]) || (e ? e.nom : null);
+    if (nom) parPlace.set(attribution[eid], nom);
+  });
+  const { num } = placesNumerotees(cl.salle);
+
+  const vue = vueSalle(cl.salle);
+  // Zone imprimable utile en A4 paysage (297 × 210 mm, marges 9 mm, en-tête et bandeau déduits).
+  const BOITE_L = 277, BOITE_H = 168;
+  const largeurMm = Math.min(BOITE_L, BOITE_H * vue.w / vue.h);
+  const casePx = largeurMm * 3.7795 / vue.w;      // 1 mm = 3,7795 px CSS à 96 ppp
+
+  let html = `<div class="entete" style="width:${largeurMm}mm;margin:0 auto 4mm">` +
+             `<h2>${echapper(cl.nom)}</h2>` +
+             `<span class="date">Plan du ${echapper(dateLisible(dateIso || new Date().toISOString()))}</span></div>` +
+             `<div class="bandeau-tableau" style="width:${largeurMm}mm;margin:0 auto">TABLEAU</div>` +
+             `<div class="plan" style="width:${largeurMm}mm;aspect-ratio:${vue.w}/${vue.h};margin:0 auto">`;
+  cl.salle.mobilier.forEach(m => {
+    html += `<div class="mobilier" style="left:${(m.c - vue.c) / vue.w * 100}%;top:${(m.r - vue.r) / vue.h * 100}%;` +
+            `width:${m.w / vue.w * 100}%;height:${m.h / vue.h * 100}%;display:flex;align-items:center;` +
+            `justify-content:center;font-size:7pt;overflow:hidden">${echapper(m.nom)}</div>`;
+  });
+  cl.salle.places.forEach(p => {
+    const nom = parPlace.get(p.id);
+    // Police mesurée pour que le prénom tienne dans la case, comme pour les cartes.
+    const taille = nom ? tailleTexte(nom, casePx * 0.84, casePx * 0.84) : 8;
+    const bord = nom ? `border-left:3px solid ${couleurEleve(nom)} !important;` : "";
+    html += `<div class="place" style="left:${(p.c - vue.c) / vue.w * 100}%;top:${(p.r - vue.r) / vue.h * 100}%;` +
+            `width:${100 / vue.w}%;height:${100 / vue.h}%">` +
+            `<div class="boite ${nom ? "occupee" : ""}" style="${bord}font-size:${taille.toFixed(1)}px">` +
+            `${nom ? echapper(nom) : `<span style="color:#bbb;font-size:6pt">${num.get(p.id)}</span>`}</div></div>`;
+  });
+  html += `</div>`;
+  feuille.innerHTML = html;
+  window.print();
+}
+
+$("#btn-imprimer").addEventListener("click", () => {
+  const cl = classeCourante();
+  if (!cl) return;
+  if (!dernierRendu || dernierRendu.classeId !== cl.id) { alert("Lancez d'abord un tirage."); return; }
+  imprimerPlan(cl, dernierRendu.attribution, dernierRendu.noms, dernierRendu.date);
+});
+
+/* --- Export image : canvas construit à la main, 1920 px de large --- */
+function rectangleArrondi(ctx, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function exporterImage(cl, attribution, noms, dateIso) {
+  const vue = vueSalle(cl.salle);
+  const L = 1920, marge = 40, enTete = 110, bandeau = 52;
+  const largeurPlan = L - marge * 2;
+  const hauteurPlan = Math.round(largeurPlan * vue.h / vue.w);
+  const H = enTete + bandeau + hauteurPlan + marge;
+  const cv = document.createElement("canvas");
+  cv.width = L; cv.height = H;
+  const ctx = cv.getContext("2d");
+  const police = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, L, H);
+
+  // En-tête
+  ctx.fillStyle = "#1b1b1f";
+  ctx.font = "700 44px " + police;
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  ctx.fillText(cl.nom, marge, enTete / 2 + 6);
+  ctx.font = "400 28px " + police;
+  ctx.fillStyle = "#6b6b76"; ctx.textAlign = "right";
+  ctx.fillText("Plan du " + dateLisible(dateIso || new Date().toISOString()), L - marge, enTete / 2 + 8);
+
+  // Bandeau TABLEAU
+  ctx.fillStyle = "#2b2b31";
+  rectangleArrondi(ctx, marge, enTete, largeurPlan, bandeau, 10); ctx.fill();
+  ctx.fillStyle = "#ffffff"; ctx.textAlign = "center";
+  ctx.font = "700 22px " + police;
+  ctx.fillText("T A B L E A U", L / 2, enTete + bandeau / 2 + 1);
+
+  const ox = marge, oy = enTete + bandeau;
+  const cw = largeurPlan / vue.w, ch = hauteurPlan / vue.h;
+
+  // Mobilier
+  cl.salle.mobilier.forEach(m => {
+    const x = ox + (m.c - vue.c) * cw, y = oy + (m.r - vue.r) * ch, w = m.w * cw, h = m.h * ch;
+    ctx.fillStyle = "#e6e6ec";
+    rectangleArrondi(ctx, x + 2, y + 2, w - 4, h - 4, 6); ctx.fill();
+    ctx.strokeStyle = "#c2c2cc"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#5a5a66"; ctx.font = "500 18px " + police; ctx.textAlign = "center";
+    ctx.fillText(m.nom, x + w / 2, y + h / 2);
+  });
+
+  // Places et cartes
+  const parPlace = new Map();
+  Object.keys(attribution || {}).forEach(eid => {
+    const e = cl.eleves.find(x => x.id === eid);
+    const nom = (noms && noms[eid]) || (e ? e.nom : null);
+    if (nom) parPlace.set(attribution[eid], nom);
+  });
+  const { num } = placesNumerotees(cl.salle);
+
+  cl.salle.places.forEach(p => {
+    const x = ox + (p.c - vue.c) * cw + cw * 0.06, y = oy + (p.r - vue.r) * ch + ch * 0.06;
+    const w = cw * 0.88, h = ch * 0.88;
+    const nom = parPlace.get(p.id);
+    if (nom) {
+      ctx.fillStyle = couleurEleve(nom);
+      rectangleArrondi(ctx, x, y, w, h, 10); ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,.14)"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = "#1b1b1f"; ctx.textAlign = "center";
+      let taille = Math.floor(h * 0.34);
+      do {
+        ctx.font = "800 " + taille + "px " + police;
+        if (ctx.measureText(nom).width <= w * 0.9) break;
+        taille -= 1;
+      } while (taille > 8);
+      ctx.fillText(nom, x + w / 2, y + h / 2 + 1);
+    } else {
+      ctx.fillStyle = "#fcfcfd";
+      rectangleArrondi(ctx, x, y, w, h, 10); ctx.fill();
+      ctx.strokeStyle = "#d7d7e0"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = "#c3c3ce"; ctx.font = "400 18px " + police; ctx.textAlign = "center";
+      ctx.fillText(String(num.get(p.id)), x + w / 2, y + h / 2);
+    }
+  });
+
+  cv.toBlob(blob => {
+    const nomFichier = "plan-" + cl.nom.replace(/[^\w\-]+/g, "_") + "-" + jourIso(new Date(dateIso || Date.now())) + ".png";
+    telecharger(nomFichier, blob);
+  }, "image/png");
+}
+
+$("#btn-export-image").addEventListener("click", () => {
+  const cl = classeCourante();
+  if (!cl) return;
+  if (!dernierRendu || dernierRendu.classeId !== cl.id) { alert("Lancez d'abord un tirage."); return; }
+  exporterImage(cl, dernierRendu.attribution, dernierRendu.noms, dernierRendu.date);
+});
+
+/* ==========================================================================
+   9. DÉMARRAGE
+   ========================================================================== */
+
+etat = charger();
+sauver();
+rendreClasses();
+$$("#outils [data-outil]").forEach(x => x.classList.toggle("actif", x.dataset.outil === outil));
+
+// Le plan projeté dépend de la taille de la fenêtre : on le refait au redimensionnement
+// (sauf pendant une animation, pour ne pas casser les vols en cours).
+let minuterieTaille = null;
+window.addEventListener("resize", () => {
+  if (ecranActif !== "tirage" || tirageEnCours) return;
+  clearTimeout(minuterieTaille);
+  minuterieTaille = setTimeout(() => {
+    const cl = classeCourante();
+    if (!cl) return;
+    if (dernierRendu && dernierRendu.classeId === cl.id && $$(".carte", coucheCartes).length) {
+      afficherStatique(cl, dernierRendu.attribution, dernierRendu.noms, dernierRendu.date);
+    } else {
+      rendrePlanTirage();
+    }
+  }, 150);
+});
+</script>
+</body>
+</html>
