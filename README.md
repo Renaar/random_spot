@@ -61,3 +61,15 @@ Tout est enregistré dans le `localStorage` du **navigateur qui ouvre la page**,
 sous la clé `plan-de-classe/v1` : rien n'est stocké sur le serveur, et rien
 n'est partagé entre deux machines. Utilisez l'export JSON (écran « Classes »)
 pour sauvegarder ou transférer vos classes.
+
+## Publication sur GitHub Pages (pour tester à distance)
+
+Une seule fois, dans l'interface web du dépôt :
+**Settings → Pages → Source : « Deploy from a branch » → branche `claude/plan-de-classe-app-y52xtq`, dossier `/ (root)` → Save.**
+
+L'adresse devient `https://renaar.github.io/random_spot/` et se met à jour
+à chaque poussée sur la branche.
+
+Le workflow `.github/workflows/pages.yml` sert uniquement si vous préférez
+l'option « Source : GitHub Actions » ; il se lance alors à la main
+(onglet Actions → GitHub Pages → Run workflow).

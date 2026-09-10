@@ -1,11 +1,14 @@
 # Publie l'application sur GitHub Pages.
-# Le premier passage active Pages sur le dépôt (enablement: true).
+#
+# Ce workflow n'est utile QUE si Pages est réglé sur « Source: GitHub Actions »
+# (Settings > Pages). Si vous avez choisi « Deploy from a branch », GitHub gère
+# le déploiement lui-même et ce fichier peut rester tel quel, inactif.
+#
+# La toute première activation de Pages doit se faire dans l'interface web :
+# le jeton d'Actions n'a pas le droit de créer le site.
 name: GitHub Pages
 
 on:
-  push:
-    branches:
-      - claude/plan-de-classe-app-y52xtq
   workflow_dispatch:
 
 permissions:
@@ -29,8 +32,6 @@ jobs:
 
       - name: Configurer Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Préparer le site (uniquement l'application)
         run: |
