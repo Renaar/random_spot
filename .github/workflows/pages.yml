@@ -1,0 +1,47 @@
+# Publie l'application sur GitHub Pages.
+# Le premier passage active Pages sur le dépôt (enablement: true).
+name: GitHub Pages
+
+on:
+  push:
+    branches:
+      - claude/plan-de-classe-app-y52xtq
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploiement:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Préparer le site (uniquement l'application)
+        run: |
+          mkdir -p public
+          cp index.html public/index.html
+
+      - name: Téléverser l'artefact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Déployer
+        id: deploiement
+        uses: actions/deploy-pages@v4
