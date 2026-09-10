@@ -475,6 +475,12 @@ details.panneau .corps{padding:0 14px 14px}
       </select>
     </div>
     <div class="opt"><input type="checkbox" id="opt-suspense"><label for="opt-suspense">Suspense final (dernier élève retardé)</label></div>
+
+    <h3 style="margin-top:14px">Remplissage de la salle</h3>
+    <div class="opt"><input type="checkbox" id="opt-devant"><label for="opt-devant">Combler d'abord les places proches du tableau</label></div>
+    <div class="opt"><input type="checkbox" id="opt-espacer"><label for="opt-espacer">Laisser une place vide entre les élèves</label></div>
+
+    <h3 style="margin-top:14px">Répétitions</h3>
     <div class="opt"><input type="checkbox" id="opt-place"><label for="opt-place">Éviter la même place qu'au dernier tirage</label></div>
     <div class="opt"><input type="checkbox" id="opt-voisins"><label for="opt-voisins">Éviter les mêmes voisins qu'au dernier tirage</label></div>
     <div class="opt" style="margin-top:12px">
@@ -627,7 +633,7 @@ function etatParDefaut() {
     version: 1,
     classes: [c],
     classeCouranteId: c.id,
-    options: { vitesse: "normal", suspense: false, eviterMemePlace: true, eviterMemesVoisins: true }
+    options: { vitesse: "normal", suspense: false, devantDabord: false, espacer: false, eviterMemePlace: true, eviterMemesVoisins: true }
   };
 }
 
@@ -649,7 +655,7 @@ function charger() {
 function normaliser(d) {
   if (!d || !Array.isArray(d.classes)) return etatParDefaut();
   d.version = 1;
-  d.options = Object.assign({ vitesse: "normal", suspense: false, eviterMemePlace: true, eviterMemesVoisins: true }, d.options || {});
+  d.options = Object.assign({ vitesse: "normal", suspense: false, devantDabord: false, espacer: false, eviterMemePlace: true, eviterMemesVoisins: true }, d.options || {});
   d.classes.forEach(c => {
     c.id = c.id || uid("cl");
     c.nom = c.nom || "Classe";
@@ -1553,6 +1559,69 @@ document.addEventListener("keydown", e => {
    ========================================================================== */
 
 /**
+ * Choisit les places qui seront réellement occupées, quand une règle de
+ * remplissage est active. Renvoie { places, adjacentes }.
+ *
+ * - « devant d'abord » : on retient en priorité les places les plus proches
+ *   du tableau (rangée la plus basse), le fond reste vide.
+ * - « espacer » : on évite de retenir deux places côte à côte, en préférant
+ *   à chaque fois la place qui condamne le moins de voisines (sinon on
+ *   gaspille : au milieu d'une table de trois, on bloque les deux bouts).
+ *
+ * Les places fixes sont toujours retenues, et chaque zone réserve d'abord
+ * de quoi loger ses élèves — sinon une contrainte dure deviendrait impossible.
+ */
+function choisirPlacesUtiles(places, besoin, forcees, besoinsZones, voisines, opts) {
+  const choisies = new Set(forcees);
+  let adjacentes = 0;
+
+  const voisineDejaChoisie = p => {
+    const v = voisines.get(p.id);
+    if (!v) return false;
+    for (const id of v) if (choisies.has(id)) return true;
+    return false;
+  };
+  const voisinesLibres = p => {
+    const v = voisines.get(p.id);
+    if (!v) return 0;
+    let n = 0;
+    v.forEach(id => { if (!choisies.has(id)) n++; });
+    return n;
+  };
+
+  /** Retient une place parmi les candidates, selon les règles actives. */
+  const prendre = candidats => {
+    let libres = candidats.filter(p => !choisies.has(p.id));
+    if (!libres.length) return false;
+    if (opts.espacer) {
+      const espacees = libres.filter(p => !voisineDejaChoisie(p));
+      if (espacees.length) libres = espacees;
+      else adjacentes++;                       // plus assez de recul : on accepte un voisin
+    }
+    if (opts.devantDabord) {
+      const devant = Math.min.apply(null, libres.map(p => p.r));
+      libres = libres.filter(p => p.r === devant);
+    }
+    if (opts.espacer) {
+      const mini = Math.min.apply(null, libres.map(voisinesLibres));
+      libres = libres.filter(p => voisinesLibres(p) === mini);
+    }
+    choisies.add(libres[aleaEntier(libres.length)].id);
+    return true;
+  };
+
+  // 1. Les zones réservent leurs places, la plus serrée en premier.
+  besoinsZones.slice().sort((a, b) => a.places.length - b.places.length).forEach(bz => {
+    let n = 0;
+    while (n < bz.nb && prendre(bz.places)) n++;
+  });
+  // 2. On complète avec le reste de la salle.
+  while (choisies.size < besoin && prendre(places)) { /* rien de plus */ }
+
+  return { places: places.filter(p => choisies.has(p.id)), adjacentes: adjacentes };
+}
+
+/**
  * Calcule une attribution élève → place.
  * Renvoie soit { ok:false, erreurs:[…] } (contrainte dure impossible : on ne lance rien),
  * soit { ok:true, attribution:{}, violations:[…] } (violations = contraintes souples non tenues).
@@ -1601,6 +1670,35 @@ function calculerTirage(cl, options) {
         voisines.get(places[j].id).add(places[i].id);
       }
     }
+  }
+
+  /* --- 3 bis. Quelles places sont réellement utilisées ? ---------------- */
+  // Sans règle de remplissage, toutes les places sont candidates (les
+  // excédentaires resteront simplement vides, au hasard). Avec « devant
+  // d'abord » ou « espacer », on retient exactement le nombre de places
+  // nécessaire, choisies selon la règle.
+  const avertissements = [];
+  let placesUtiles = places;
+  let parZoneUtile = parZone;
+
+  if (options.devantDabord || options.espacer) {
+    const besoinsZones = [];
+    parZone.forEach((placesZone, zid) => {
+      const nb = avecZone.filter(x => x.zoneId === zid).length;
+      if (nb) besoinsZones.push({ zoneId: zid, places: placesZone, nb: nb });
+    });
+    const choix = choisirPlacesUtiles(places, presents.length, Object.values(fixes), besoinsZones, voisines, options);
+    if (choix.places.length >= presents.length) {
+      placesUtiles = choix.places;
+      const idsUtiles = new Set(placesUtiles.map(p => p.id));
+      parZoneUtile = new Map();
+      parZone.forEach((v, k) => parZoneUtile.set(k, v.filter(p => idsUtiles.has(p.id))));
+      if (choix.adjacentes > 0) {
+        avertissements.push(`Pas assez de places espacées dans ce plan : ${choix.adjacentes} élève${choix.adjacentes > 1 ? "s se retrouvent" : " se retrouve"} sans place vide à côté.`);
+      }
+    }
+    // Si la sélection n'aboutit pas (cas très contraint), on repart sur
+    // l'ensemble des places plutôt que de bloquer le tirage.
   }
 
   /* --- 4. Mémoire du dernier tirage archivé ---------------------------- */
@@ -1662,11 +1760,11 @@ function calculerTirage(cl, options) {
     // Du plus contraint au moins contraint : la zone la plus serrée passe en premier.
     const ordreZones = avecZone.map(x => ({
       eleve: x.eleve, zoneId: x.zoneId,
-      dispo: parZone.get(x.zoneId).filter(p => !occupees.has(p.id)).length
+      dispo: parZoneUtile.get(x.zoneId).filter(p => !occupees.has(p.id)).length
     })).sort((a, b) => a.dispo - b.dispo);
 
     for (const item of ordreZones) {
-      const dispo = parZone.get(item.zoneId).filter(p => !occupees.has(p.id));
+      const dispo = parZoneUtile.get(item.zoneId).filter(p => !occupees.has(p.id));
       if (!dispo.length) return null;                  // zone saturée : tentative perdue
       const choix = dispo[aleaEntier(dispo.length)];
       attr[item.eleve.id] = choix.id;
@@ -1674,7 +1772,7 @@ function calculerTirage(cl, options) {
     }
 
     const restants = melanger(libresEleves.slice());
-    const restantes = melanger(places.filter(p => !occupees.has(p.id)));
+    const restantes = melanger(placesUtiles.filter(p => !occupees.has(p.id)));
     restants.forEach((e, i) => { attr[e.id] = restantes[i].id; });
     return attr;
   }
@@ -1702,14 +1800,14 @@ function calculerTirage(cl, options) {
     if (mobiles.length < 2) return viol;
     const zoneOk = (eid, pid) => {
       const zid = cl.regles.zones[eid];
-      if (!zid || !parZone.has(zid)) return true;
-      return parZone.get(zid).some(p => p.id === pid);
+      if (!zid || !parZoneUtile.has(zid)) return true;
+      return parZoneUtile.get(zid).some(p => p.id === pid);
     };
     let courant = viol;
     for (let i = 0; i < 2500 && courant.length; i++) {
       const a = mobiles[aleaEntier(mobiles.length)];
       const occupees = new Set(Object.values(attr));
-      const vides = places.filter(p => !occupees.has(p.id));
+      const vides = placesUtiles.filter(p => !occupees.has(p.id));
       // Une fois sur trois, on tente de glisser l'élève sur une place restée vide.
       const versVide = vides.length && aleaEntier(3) === 0;
       const b = versVide ? null : mobiles[aleaEntier(mobiles.length)];
@@ -1727,7 +1825,7 @@ function calculerTirage(cl, options) {
     return courant;
   }
 
-  return { ok: true, attribution: meilleure, violations: meilleuresViol };
+  return { ok: true, attribution: meilleure, violations: meilleuresViol, avertissements: avertissements };
 }
 
 function clePaire(a, b) { return a < b ? a + "|" + b : b + "|" + a; }
@@ -1806,6 +1904,8 @@ function preparerTirage() {
   rendrePlanTirage();
   $("#opt-vitesse").value = etat.options.vitesse;
   $("#opt-suspense").checked = etat.options.suspense;
+  $("#opt-devant").checked = etat.options.devantDabord;
+  $("#opt-espacer").checked = etat.options.espacer;
   $("#opt-place").checked = etat.options.eviterMemePlace;
   $("#opt-voisins").checked = etat.options.eviterMemesVoisins;
   $("#btn-reutiliser").disabled = !cl.historique.length;
@@ -1827,7 +1927,13 @@ function majLegendePioche(n) {
 
 function afficherBandeau(titre, lignes) {
   const b = $("#bandeau-tirage");
-  b.innerHTML = `<strong>${echapper(titre)}</strong><ul>${lignes.map(l => `<li>${echapper(l)}</li>`).join("")}</ul>`;
+  const MAX = 8;                                   // au-delà, le bandeau mangerait l'écran
+  const visibles = lignes.slice(0, MAX);
+  const reste = lignes.length - visibles.length;
+  b.innerHTML = `<strong>${echapper(titre)}</strong><ul>` +
+    visibles.map(l => `<li>${echapper(l)}</li>`).join("") +
+    (reste > 0 ? `<li>… et ${reste} autre${reste > 1 ? "s" : ""}.</li>` : "") +
+    `</ul>`;
   b.classList.add("visible");
 }
 function masquerBandeau() { $("#bandeau-tirage").classList.remove("visible"); }
@@ -2021,8 +2127,9 @@ async function lancerTirage() {
 
   archiverTirage(cl, resultat.attribution);
   dernierRendu = { classeId: cl.id, attribution: resultat.attribution, noms: cl.historique[0].noms, date: cl.historique[0].date };
-  if (resultat.violations.length) {
-    afficherBandeau("Le plan est fait, mais ces règles n'ont pas pu être respectées :", resultat.violations);
+  const remarques = resultat.violations.concat(resultat.avertissements || []);
+  if (remarques.length) {
+    afficherBandeau("Le plan est fait, mais ces règles n'ont pas pu être respectées :", remarques);
   }
   if (ecranActif === "classes") rendreHistorique();
 }
@@ -2052,6 +2159,8 @@ $("#btn-plein-ecran").addEventListener("click", () => {
 });
 $("#opt-vitesse").addEventListener("change", e => { etat.options.vitesse = e.target.value; sauver(); });
 $("#opt-suspense").addEventListener("change", e => { etat.options.suspense = e.target.checked; sauver(); });
+$("#opt-devant").addEventListener("change", e => { etat.options.devantDabord = e.target.checked; sauver(); });
+$("#opt-espacer").addEventListener("change", e => { etat.options.espacer = e.target.checked; sauver(); });
 $("#opt-place").addEventListener("change", e => { etat.options.eviterMemePlace = e.target.checked; sauver(); });
 $("#opt-voisins").addEventListener("change", e => { etat.options.eviterMemesVoisins = e.target.checked; sauver(); });
 $("#btn-reutiliser").addEventListener("click", () => {
